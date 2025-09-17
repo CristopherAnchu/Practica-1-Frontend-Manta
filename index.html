@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Gimnasio</title>
+    <!-- Metro 4 CSS -->
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/v4/css/metro-all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="center-wrapper">
+        <div class="login-box p-8 bg-white shadow-2 border bd-red">
+            <h2 class="text-center fg-red mb-5">Bienvenido al Gimnasio</h2>
+            <form id="loginForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="username" class="fg-red">Usuario</label>
+                    <input type="text" data-role="input" data-prepend="<span class='mif-user fg-red'></span>" id="username" class="metro-input" placeholder="Ingresa tu usuario">
+                </div>
+                <div class="form-group">
+                    <label for="password" class="fg-red">Contraseña</label>
+                    <input type="password" data-role="input" data-prepend="<span class='mif-lock fg-red'></span>" id="password" class="metro-input" placeholder="Ingresa tu contraseña">
+                </div>
+                <button type="submit" class="button bg-red fg-white mt-4 w-100">Ingresar</button>
+            </form>
+        </div>
+    </div>
+    <!-- Metro 4 JS -->
+    <script src="https://cdn.metroui.org.ua/v4/js/metro.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <!-- Custom JS -->
+    <script src="script.js"></script>
+</body>
+</html>
