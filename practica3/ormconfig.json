@@ -1,0 +1,6 @@
+{
+  "type": "sqlite",
+  "database": "gym_reservas.sqlite",
+  "synchronize": true,
+  "entities": ["dist/entities//*.js"]
+}
