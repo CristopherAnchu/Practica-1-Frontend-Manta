@@ -1,8 +1,12 @@
+// src/asistencias/asistencias.module.ts
 import { Module } from '@nestjs/common';
-import { AsistenciasService } from './asistencias.service';
+import { HttpModule } from '@nestjs/axios';
+import { AsistenciasRestService } from './asistencias.service';
 import { AsistenciasResolver } from './asistencias.resolver';
 
 @Module({
-  providers: [AsistenciasResolver, AsistenciasService],
+  imports: [HttpModule],
+  providers: [AsistenciasResolver, AsistenciasRestService],
+  exports: [AsistenciasRestService, HttpModule],
 })
 export class AsistenciasModule {}

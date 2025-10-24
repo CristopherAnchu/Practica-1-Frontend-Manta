@@ -1,37 +1,30 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { UserType } from '../types/user.type';
+import { AxiosResponse } from 'axios';
 
 @Injectable()
-export class UsersService {
+export class UsersRestService {
+  private readonly baseUrl = 'http://localhost:4000/api/users';
+
   constructor(private readonly httpService: HttpService) {}
 
-  async findAll(): Promise<UserType[]> {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get('/users')
-      );
-      return response.data;
-    } catch (error) {
-      throw new HttpException(
-        error.response?.data || 'Error al obtener usuarios',
-        error.response?.status || 500,
-      );
-    }
+  async findAll(): Promise<any> {
+    const response: AxiosResponse<any> = await firstValueFrom(
+      this.httpService.get(`${this.baseUrl}`)
+    );
+    return response.data;
   }
 
-  async findOne(id: string): Promise<UserType> {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(`/users/${id}`)
-      );
-      return response.data;
-    } catch (error) {
-      throw new HttpException(
-        error.response?.data || 'Error al obtener el usuario',
-        error.response?.status || 500,
-      );
-    }
+  // Agrega este método
+  async findOne(id: string): Promise<any> {
+    const response: AxiosResponse<any> = await firstValueFrom(
+      this.httpService.get(`${this.baseUrl}/${id}`)
+    );
+    return response.data;
   }
 }
+
+
+
+

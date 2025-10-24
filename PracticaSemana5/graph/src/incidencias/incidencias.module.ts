@@ -1,8 +1,12 @@
+// src/incidencias/incidencias.module.ts
 import { Module } from '@nestjs/common';
-import { IncidenciasService } from './incidencias.service';
+import { HttpModule } from '@nestjs/axios';
+import { IncidenciasRestService } from './incidencias.service';
 import { IncidenciasResolver } from './incidencias.resolver';
 
 @Module({
-  providers: [IncidenciasResolver, IncidenciasService],
+  imports: [HttpModule],
+  providers: [IncidenciasResolver, IncidenciasRestService],
+  exports: [IncidenciasRestService],
 })
 export class IncidenciasModule {}

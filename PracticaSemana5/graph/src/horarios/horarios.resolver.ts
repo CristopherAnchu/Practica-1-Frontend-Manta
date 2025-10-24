@@ -1,35 +1,19 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
-import { HorariosService } from './horarios.service';
-import { Horario } from './entities/horario.entity';
-import { CreateHorarioInput } from './dto/create-horario.input';
-import { UpdateHorarioInput } from './dto/update-horario.input';
+// src/horarios/horarios.resolver.ts
+import { Resolver, Query, Args, Int } from '@nestjs/graphql';
+import { HorarioType } from '../types/horarios.type';
+import { HorariosRestService } from './horarios.service';
 
-@Resolver(() => Horario)
+@Resolver(() => HorarioType)
 export class HorariosResolver {
-  constructor(private readonly horariosService: HorariosService) {}
+  constructor(private horariosService: HorariosRestService) {}
 
-  @Mutation(() => Horario)
-  createHorario(@Args('createHorarioInput') createHorarioInput: CreateHorarioInput) {
-    return this.horariosService.create(createHorarioInput);
-  }
-
-  @Query(() => [Horario], { name: 'horarios' })
-  findAll() {
+  @Query(() => [HorarioType], { name: 'horarios' })
+  async getHorarios() {
     return this.horariosService.findAll();
   }
 
-  @Query(() => Horario, { name: 'horario' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
+  @Query(() => HorarioType, { name: 'horario' })
+  async getHorario(@Args('id', { type: () => Int }) id: number) {
     return this.horariosService.findOne(id);
-  }
-
-  @Mutation(() => Horario)
-  updateHorario(@Args('updateHorarioInput') updateHorarioInput: UpdateHorarioInput) {
-    return this.horariosService.update(updateHorarioInput.id, updateHorarioInput);
-  }
-
-  @Mutation(() => Horario)
-  removeHorario(@Args('id', { type: () => Int }) id: number) {
-    return this.horariosService.remove(id);
   }
 }

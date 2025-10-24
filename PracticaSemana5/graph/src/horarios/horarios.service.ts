@@ -1,26 +1,19 @@
+// src/horarios/horarios-rest.service.ts
 import { Injectable } from '@nestjs/common';
-import { CreateHorarioInput } from './dto/create-horario.input';
-import { UpdateHorarioInput } from './dto/update-horario.input';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class HorariosService {
-  create(createHorarioInput: CreateHorarioInput) {
-    return 'This action adds a new horario';
+export class HorariosRestService {
+  constructor(private readonly httpService: HttpService) {}
+
+  async findAll() {
+    const response = await firstValueFrom(this.httpService.get('/horarios'));
+    return response.data;
   }
 
-  findAll() {
-    return `This action returns all horarios`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} horario`;
-  }
-
-  update(id: number, updateHorarioInput: UpdateHorarioInput) {
-    return `This action updates a #${id} horario`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} horario`;
+  async findOne(id: number) {
+    const response = await firstValueFrom(this.httpService.get(`/horarios/${id}`));
+    return response.data;
   }
 }

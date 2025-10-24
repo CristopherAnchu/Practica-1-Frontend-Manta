@@ -1,26 +1,19 @@
+// src/rol/rol-rest.service.ts
 import { Injectable } from '@nestjs/common';
-import { CreateRolInput } from './dto/create-rol.input';
-import { UpdateRolInput } from './dto/update-rol.input';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class RolService {
-  create(createRolInput: CreateRolInput) {
-    return 'This action adds a new rol';
+export class RolRestService {
+  constructor(private readonly httpService: HttpService) {}
+
+  async findAll() {
+    const response = await firstValueFrom(this.httpService.get('/rol'));
+    return response.data;
   }
 
-  findAll() {
-    return `This action returns all rol`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} rol`;
-  }
-
-  update(id: number, updateRolInput: UpdateRolInput) {
-    return `This action updates a #${id} rol`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} rol`;
+  async findOne(id: number) {
+    const response = await firstValueFrom(this.httpService.get(`/rol/${id}`));
+    return response.data;
   }
 }

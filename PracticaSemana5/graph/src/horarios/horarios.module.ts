@@ -1,8 +1,12 @@
+// src/horarios/horarios.module.ts
 import { Module } from '@nestjs/common';
-import { HorariosService } from './horarios.service';
+import { HttpModule } from '@nestjs/axios';
+import { HorariosRestService } from './horarios.service';
 import { HorariosResolver } from './horarios.resolver';
 
 @Module({
-  providers: [HorariosResolver, HorariosService],
+  imports: [HttpModule],
+  providers: [HorariosResolver, HorariosRestService],
+  exports: [HorariosRestService],
 })
 export class HorariosModule {}

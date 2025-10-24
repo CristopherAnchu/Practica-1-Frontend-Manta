@@ -19,16 +19,16 @@ export class AsistenciasController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.asistenciasService.findOne(+id);
+    return this.asistenciasService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAsistenciaDto: UpdateAsistenciaDto) {
-    return this.asistenciasService.update(+id, updateAsistenciaDto);
+    return this.asistenciasService.update(id, updateAsistenciaDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.asistenciasService.remove(+id);
+    return this.asistenciasService.remove(id);
   }
 }

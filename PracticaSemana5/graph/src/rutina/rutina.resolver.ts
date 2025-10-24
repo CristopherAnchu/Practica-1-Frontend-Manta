@@ -1,35 +1,19 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
-import { RutinaService } from './rutina.service';
-import { Rutina } from './entities/rutina.entity';
-import { CreateRutinaInput } from './dto/create-rutina.input';
-import { UpdateRutinaInput } from './dto/update-rutina.input';
+// src/rutina/rutina.resolver.ts
+import { Resolver, Query, Args, Int } from '@nestjs/graphql';
+import { RutinaType } from '../types/rutina.types';
+import { RutinaRestService } from './rutina.service';
 
-@Resolver(() => Rutina)
+@Resolver(() => RutinaType)
 export class RutinaResolver {
-  constructor(private readonly rutinaService: RutinaService) {}
+  constructor(private rutinaService: RutinaRestService) {}
 
-  @Mutation(() => Rutina)
-  createRutina(@Args('createRutinaInput') createRutinaInput: CreateRutinaInput) {
-    return this.rutinaService.create(createRutinaInput);
-  }
-
-  @Query(() => [Rutina], { name: 'rutina' })
-  findAll() {
+  @Query(() => [RutinaType], { name: 'rutinas' })
+  async getRutinas() {
     return this.rutinaService.findAll();
   }
 
-  @Query(() => Rutina, { name: 'rutina' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
+  @Query(() => RutinaType, { name: 'rutina' })
+  async getRutina(@Args('id', { type: () => Int }) id: number) {
     return this.rutinaService.findOne(id);
-  }
-
-  @Mutation(() => Rutina)
-  updateRutina(@Args('updateRutinaInput') updateRutinaInput: UpdateRutinaInput) {
-    return this.rutinaService.update(updateRutinaInput.id, updateRutinaInput);
-  }
-
-  @Mutation(() => Rutina)
-  removeRutina(@Args('id', { type: () => Int }) id: number) {
-    return this.rutinaService.remove(id);
   }
 }

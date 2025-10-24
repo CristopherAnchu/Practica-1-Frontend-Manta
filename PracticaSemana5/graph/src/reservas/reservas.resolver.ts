@@ -1,35 +1,19 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
-import { ReservasService } from './reservas.service';
-import { Reserva } from './entities/reserva.entity';
-import { CreateReservaInput } from './dto/create-reserva.input';
-import { UpdateReservaInput } from './dto/update-reserva.input';
+// src/reservas/reservas.resolver.ts
+import { Resolver, Query, Args, Int } from '@nestjs/graphql';
+import { ReservaType } from '../types/reserva.type';
+import { ReservasRestService } from './reservas.service';
 
-@Resolver(() => Reserva)
+@Resolver(() => ReservaType)
 export class ReservasResolver {
-  constructor(private readonly reservasService: ReservasService) {}
+  constructor(private reservasService: ReservasRestService) {}
 
-  @Mutation(() => Reserva)
-  createReserva(@Args('createReservaInput') createReservaInput: CreateReservaInput) {
-    return this.reservasService.create(createReservaInput);
-  }
-
-  @Query(() => [Reserva], { name: 'reservas' })
-  findAll() {
+  @Query(() => [ReservaType], { name: 'reservas' })
+  async getReservas() {
     return this.reservasService.findAll();
   }
 
-  @Query(() => Reserva, { name: 'reserva' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
+  @Query(() => ReservaType, { name: 'reserva' })
+  async getReserva(@Args('id', { type: () => Int }) id: number) {
     return this.reservasService.findOne(id);
-  }
-
-  @Mutation(() => Reserva)
-  updateReserva(@Args('updateReservaInput') updateReservaInput: UpdateReservaInput) {
-    return this.reservasService.update(updateReservaInput.id, updateReservaInput);
-  }
-
-  @Mutation(() => Reserva)
-  removeReserva(@Args('id', { type: () => Int }) id: number) {
-    return this.reservasService.remove(id);
   }
 }

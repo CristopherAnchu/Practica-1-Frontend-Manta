@@ -1,26 +1,19 @@
+// src/incidencias/incidencias-rest.service.ts
 import { Injectable } from '@nestjs/common';
-import { CreateIncidenciaInput } from './dto/create-incidencia.input';
-import { UpdateIncidenciaInput } from './dto/update-incidencia.input';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class IncidenciasService {
-  create(createIncidenciaInput: CreateIncidenciaInput) {
-    return 'This action adds a new incidencia';
+export class IncidenciasRestService {
+  constructor(private readonly httpService: HttpService) {}
+
+  async findAll() {
+    const response = await firstValueFrom(this.httpService.get('/incidencias'));
+    return response.data;
   }
 
-  findAll() {
-    return `This action returns all incidencias`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} incidencia`;
-  }
-
-  update(id: number, updateIncidenciaInput: UpdateIncidenciaInput) {
-    return `This action updates a #${id} incidencia`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} incidencia`;
+  async findOne(id: number) {
+    const response = await firstValueFrom(this.httpService.get(`/incidencias/${id}`));
+    return response.data;
   }
 }

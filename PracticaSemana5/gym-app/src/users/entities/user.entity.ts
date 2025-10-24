@@ -13,6 +13,6 @@ export class User {
   email: string;
 
   @ManyToOne(() => Rol, (rol) => rol.users, { eager: false })
-  @JoinColumn({ name: 'rolId' })
+  @JoinColumn({ name: 'id' })
   rol: Rol;
 }
