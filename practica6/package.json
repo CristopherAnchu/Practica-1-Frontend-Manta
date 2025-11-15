@@ -1,0 +1,16 @@
+{
+  "name": "gym-app-tests",
+  "version": "1.0.0",
+  "description": "Test suite for Gym App",
+  "scripts": {
+    "test": "ts-node test-rest.ts",
+    "test:rest": "cd rest && npm run start:dev",
+    "test:ws": "cd ws && npm run start:dev"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "axios": "^1.7.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}

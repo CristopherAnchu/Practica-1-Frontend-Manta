@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test Client</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 5px;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-entry.sent {
+            color: #004085;
+        }
+        .log-entry.received {
+            color: #155724;
+        }
+        .log-entry.error {
+            color: #721c24;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 WebSocket Test Client - Gym App</h1>
+
+    <div class="container">
+        <h2>Estado de Conexión</h2>
+        <div id="status" class="status disconnected">Desconectado</div>
+        <button id="connectBtn" onclick="connect()">Conectar</button>
+        <button id="disconnectBtn" onclick="disconnect()" disabled>Desconectar</button>
+    </div>
+
+    <div class="container">
+        <h2>Pruebas de Eventos</h2>
+        
+        <div class="form-group">
+            <button onclick="testUserCreated()">🧑 Crear Usuario</button>
+            <button onclick="testReservaCreated()">📅 Crear Reserva</button>
+            <button onclick="testRutinaCreated()">💪 Crear Rutina</button>
+            <button onclick="testEquipoCreated()">🏋️ Crear Equipo</button>
+            <button onclick="testIncidenciaCreated()">⚠️ Crear Incidencia</button>
+            <button onclick="testAsistenciaUpdated()">✅ Actualizar Asistencia</button>
+        </div>
+
+        <div class="form-group">
+            <label>Evento Personalizado:</label>
+            <input type="text" id="customEvent" placeholder="nombre-evento" style="width: 200px;">
+            <input type="text" id="customData" placeholder='{"key": "value"}' style="width: 300px;">
+            <button onclick="sendCustomEvent()">Enviar</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Registro de Eventos</h2>
+        <button onclick="clearLog()">Limpiar Log</button>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let socket = null;
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            log.insertBefore(entry, log.firstChild);
+        }
+
+        function updateStatus(connected) {
+            const status = document.getElementById('status');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            if (connected) {
+                status.textContent = '✅ Conectado';
+                status.className = 'status connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            } else {
+                status.textContent = '❌ Desconectado';
+                status.className = 'status disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+
+        function connect() {
+            if (socket) return;
+
+            addLog('Intentando conectar a ws://localhost:3001...', 'sent');
+            socket = io('http://localhost:3001');
+
+            socket.on('connect', () => {
+                addLog(`✅ Conectado! ID: ${socket.id}`, 'received');
+                updateStatus(true);
+            });
+
+            socket.on('disconnect', () => {
+                addLog('❌ Desconectado', 'error');
+                updateStatus(false);
+                socket = null;
+            });
+
+            socket.on('connection-status', (data) => {
+                addLog(`📡 Estado de conexión: ${JSON.stringify(data)}`, 'received');
+            });
+
+            socket.on('user-created', (data) => {
+                addLog(`👤 Usuario creado: ${JSON.stringify(data)}`, 'received');
+            });
+
+            socket.on('reserva-created', (data) => {
+                addLog(`📅 Reserva creada: ${JSON.stringify(data)}`, 'received');
+            });
+
+            socket.on('rutina-created', (data) => {
+                addLog(`💪 Rutina creada: ${JSON.stringify(data)}`, 'received');
+            });
+
+            socket.on('equipo-created', (data) => {
+                addLog(`🏋️ Equipo creado: ${JSON.stringify(data)}`, 'received');
+            });
+
+            socket.on('incidencia-created', (data) => {
+                addLog(`⚠️ Incidencia creada: ${JSON.stringify(data)}`, 'received');
+            });
+
+            socket.on('asistencia-updated', (data) => {
+                addLog(`✅ Asistencia actualizada: ${JSON.stringify(data)}`, 'received');
+            });
+
+            socket.on('notification-created', (data) => {
+                addLog(`🔔 Notificación: ${JSON.stringify(data)}`, 'received');
+            });
+
+            socket.on('general-notification', (data) => {
+                addLog(`📢 Notificación general: ${JSON.stringify(data)}`, 'received');
+            });
+
+            socket.onAny((event, ...args) => {
+                addLog(`📨 Evento recibido: ${event} - ${JSON.stringify(args)}`, 'received');
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                updateStatus(false);
+            }
+        }
+
+        function testUserCreated() {
+            if (!socket) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            const data = {
+                id: Math.random().toString(36).substr(2, 9),
+                name: 'Juan Pérez',
+                email: 'juan@example.com',
+                rol: 'cliente'
+            };
+            socket.emit('create-user', data);
+            addLog(`📤 Enviando create-user: ${JSON.stringify(data)}`, 'sent');
+        }
+
+        function testReservaCreated() {
+            if (!socket) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            const data = {
+                id: Math.random().toString(36).substr(2, 9),
+                fecha: new Date().toISOString(),
+                horaInicio: '10:00',
+                horaFin: '11:00',
+                tipoActividad: 'Pesas'
+            };
+            socket.emit('create-reserva', data);
+            addLog(`📤 Enviando create-reserva: ${JSON.stringify(data)}`, 'sent');
+        }
+
+        function testRutinaCreated() {
+            if (!socket) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            const data = {
+                id: Math.random().toString(36).substr(2, 9),
+                nombre: 'Rutina de Fuerza',
+                descripcion: 'Ejercicios de fuerza para principiantes',
+                duracionMinutos: 45
+            };
+            socket.emit('create-rutina', data);
+            addLog(`📤 Enviando create-rutina: ${JSON.stringify(data)}`, 'sent');
+        }
+
+        function testEquipoCreated() {
+            if (!socket) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            const data = {
+                id: Math.random().toString(36).substr(2, 9),
+                nombre: 'Mancuerna 10kg',
+                tipo: 'Pesas',
+                descripcion: 'Mancuerna de hierro fundido'
+            };
+            socket.emit('create-equipo', data);
+            addLog(`📤 Enviando create-equipo: ${JSON.stringify(data)}`, 'sent');
+        }
+
+        function testIncidenciaCreated() {
+            if (!socket) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            const data = {
+                id: Math.random().toString(36).substr(2, 9),
+                descripcion: 'Máquina de press rota',
+                estado: 'pendiente'
+            };
+            socket.emit('create-incidencia', data);
+            addLog(`📤 Enviando create-incidencia: ${JSON.stringify(data)}`, 'sent');
+        }
+
+        function testAsistenciaUpdated() {
+            if (!socket) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            const data = {
+                id: Math.random().toString(36).substr(2, 9),
+                horaEntrada: new Date().toISOString(),
+                estado: 'presente'
+            };
+            socket.emit('update-asistencia', data);
+            addLog(`📤 Enviando update-asistencia: ${JSON.stringify(data)}`, 'sent');
+        }
+
+        function sendCustomEvent() {
+            if (!socket) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            const event = document.getElementById('customEvent').value;
+            const dataStr = document.getElementById('customData').value;
+            
+            if (!event) {
+                alert('Ingresa un nombre de evento');
+                return;
+            }
+
+            let data;
+            try {
+                data = JSON.parse(dataStr || '{}');
+            } catch (e) {
+                alert('JSON inválido');
+                return;
+            }
+
+            socket.emit(event, data);
+            addLog(`📤 Enviando ${event}: ${JSON.stringify(data)}`, 'sent');
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // Auto-conectar al cargar
+        window.onload = () => {
+            addLog('🚀 Cliente de prueba iniciado', 'info');
+        };
+    </script>
+</body>
+</html>
