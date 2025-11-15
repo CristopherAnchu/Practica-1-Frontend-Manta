@@ -1,0 +1,42 @@
+<div class="container mt-3">
+  <h3>Administrar Reservas</h3>
+
+  <form id="r_form" (submit)="crear($event)" class="mb-3">
+    <div class="row g-2">
+      <div class="col-md-3">
+        <select id="r_usuario" class="form-select">
+          <option value="">-- Seleccione usuario --</option>
+          <option *ngFor="let u of users" [value]="u.id">{{u.email}} ({{u.nombre}})</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input id="r_fecha" class="form-control" type="date" />
+      </div>
+      <div class="col-md-2">
+        <input id="r_hora" class="form-control" type="time" />
+      </div>
+      <div class="col-md-2">
+        <input id="r_duracion" class="form-control" type="number" min="1" max="4" value="1" />
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-success">Crear Reserva</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table table-striped">
+    <thead>
+      <tr><th>Usuario</th><th>Fecha</th><th>Hora</th><th>Duración</th><th>Estado</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of reservas">
+        <td>{{ getUserEmail(r.usuarioId) }}</td>
+        <td>{{ r.fecha }}</td>
+        <td>{{ r.hora || '-' }}</td>
+        <td>{{ r.duracion || 1 }}</td>
+        <td>{{ r.estado }}</td>
+        <td><button (click)="eliminar(r.id)" class="btn btn-sm btn-danger">Eliminar</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

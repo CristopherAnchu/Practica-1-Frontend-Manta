@@ -1,0 +1,102 @@
+<div class="login-container">
+  <!-- Panel Izquierdo - Imagen -->
+  <div class="login-image-panel">
+    <div class="image-content">
+      <img src="logo-login.png" class="login-logo" alt="UNIFIT Logo">
+      <div class="welcome-text">
+        <h2>¡Bienvenido de nuevo!</h2>
+        <p>Inicia sesión para acceder a tu cuenta y continuar con tu rutina</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel Derecho - Formulario -->
+  <div class="login-form-panel">
+    <div class="form-wrapper">
+      <!-- Logo Animado -->
+      <div class="titulo-animado">
+        <span>U</span><span>N</span><span>I</span><span>F</span><span>I</span><span>T</span>
+      </div>
+
+      <!-- Header -->
+      <div class="login-header">
+        <h2><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</h2>
+        <p>Ingresa tus credenciales para continuar</p>
+      </div>
+
+      <!-- Formulario -->
+      <form id="loginForm" (submit)="onSubmit($event)" class="login-form">
+        <!-- Email -->
+        <div class="form-group-login">
+          <label class="form-label-login">
+            <i class="bi bi-envelope"></i> Correo Electrónico
+          </label>
+          <input 
+            type="email" 
+            id="formEmail" 
+            class="form-control-login"
+            placeholder="ejemplo@correo.com"
+            required>
+          <div class="input-icon">
+            <i class="bi bi-at"></i>
+          </div>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="form-group-login">
+          <label class="form-label-login">
+            <i class="bi bi-lock"></i> Contraseña
+          </label>
+          <input 
+            type="password" 
+            id="formPassword" 
+            class="form-control-login"
+            placeholder="Ingresa tu contraseña"
+            required>
+          <div class="input-icon">
+            <i class="bi bi-key"></i>
+          </div>
+        </div>
+
+        <!-- Recordar y Olvidé -->
+        <div class="form-options">
+          <label class="remember-checkbox">
+            <input type="checkbox">
+            <span>Recordarme</span>
+          </label>
+          <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <!-- Botón Login -->
+        <button type="submit" class="btn-login-submit">
+          <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+        </button>
+
+        <!-- Divider -->
+        <div class="divider-login">
+          <span>o</span>
+        </div>
+
+        <!-- Registrarse -->
+        <div class="register-section">
+          <p>¿No tienes una cuenta?</p>
+          <button type="button" class="btn-register" (click)="irCrearUsuario()">
+            <i class="bi bi-person-plus"></i> Crear Cuenta
+          </button>
+        </div>
+      </form>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p><i class="bi bi-shield-check"></i> Tus datos están seguros con nosotros</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer Absoluto -->
+<div class="footer-absolute">
+  <p>© 2025 UNIFIT - Todos los derechos reservados</p>
+</div>
+
+

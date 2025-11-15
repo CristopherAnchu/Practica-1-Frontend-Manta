@@ -1,0 +1,165 @@
+<div class="register-container">
+  <div class="register-card">
+    <!-- Header con logo -->
+    <div class="register-header">
+      <div class="titulo-animado">
+        <span>U</span><span>N</span><span>I</span><span>F</span><span>I</span><span>T</span>
+      </div>
+      <h2><i class="bi bi-person-plus-fill"></i> Crear Cuenta</h2>
+      <p>Únete a nuestra comunidad fitness</p>
+    </div>
+
+    <!-- Formulario -->
+    <form (submit)="onSubmit($event)" class="register-form">
+      <!-- Nombre Completo -->
+      <div class="form-group-modern">
+        <label class="form-label-register">
+          <i class="bi bi-person"></i> Nombre Completo
+        </label>
+        <input 
+          type="text" 
+          class="form-control-register" 
+          [(ngModel)]="formData.nombre"
+          name="nombre"
+          (blur)="validateNombre()"
+          placeholder="Ingresa tu nombre completo"
+          [class.error]="errors.nombre">
+        <small class="error-message" *ngIf="errors.nombre">
+          <i class="bi bi-exclamation-circle"></i> {{ errors.nombre }}
+        </small>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group-modern">
+        <label class="form-label-register">
+          <i class="bi bi-envelope"></i> Correo Electrónico
+        </label>
+        <input 
+          type="email" 
+          class="form-control-register" 
+          [(ngModel)]="formData.email"
+          name="email"
+          (blur)="validateEmail()"
+          placeholder="ejemplo@correo.com"
+          [class.error]="errors.email">
+        <small class="error-message" *ngIf="errors.email">
+          <i class="bi bi-exclamation-circle"></i> {{ errors.email }}
+        </small>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="form-group-modern">
+        <label class="form-label-register">
+          <i class="bi bi-phone"></i> Teléfono (Opcional)
+        </label>
+        <input 
+          type="tel" 
+          class="form-control-register" 
+          [(ngModel)]="formData.telefono"
+          name="telefono"
+          (blur)="validateTelefono()"
+          placeholder="0987654321"
+          maxlength="10"
+          [class.error]="errors.telefono">
+        <small class="error-message" *ngIf="errors.telefono">
+          <i class="bi bi-exclamation-circle"></i> {{ errors.telefono }}
+        </small>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="form-group-modern">
+        <label class="form-label-register">
+          <i class="bi bi-lock"></i> Contraseña
+        </label>
+        <div class="password-input-wrapper">
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            class="form-control-register password-input" 
+            [(ngModel)]="formData.password"
+            name="password"
+            (input)="validatePassword()"
+            placeholder="Mínimo 6 caracteres"
+            [class.error]="errors.password">
+          <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+            <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+          </button>
+        </div>
+        <small class="error-message" *ngIf="errors.password">
+          <i class="bi bi-exclamation-circle"></i> {{ errors.password }}
+        </small>
+        
+        <!-- Indicador de fortaleza -->
+        <div class="password-strength" *ngIf="formData.password && !errors.password">
+          <div class="strength-bar">
+            <div class="strength-fill" 
+                 [style.width.%]="(passwordStrength / 5) * 100"
+                 [class.weak]="passwordStrength <= 2"
+                 [class.medium]="passwordStrength === 3"
+                 [class.strong]="passwordStrength >= 4">
+            </div>
+          </div>
+          <small class="strength-text" 
+                 [class.weak]="passwordStrength <= 2"
+                 [class.medium]="passwordStrength === 3"
+                 [class.strong]="passwordStrength >= 4">
+            {{ passwordStrengthText }}
+          </small>
+        </div>
+      </div>
+
+      <!-- Confirmar Contraseña -->
+      <div class="form-group-modern">
+        <label class="form-label-register">
+          <i class="bi bi-lock-fill"></i> Confirmar Contraseña
+        </label>
+        <div class="password-input-wrapper">
+          <input 
+            [type]="showConfirmPassword ? 'text' : 'password'" 
+            class="form-control-register password-input" 
+            [(ngModel)]="formData.confirmPassword"
+            name="confirmPassword"
+            (blur)="validateConfirmPassword()"
+            placeholder="Repite tu contraseña"
+            [class.error]="errors.confirmPassword">
+          <button type="button" class="password-toggle" (click)="toggleConfirmPasswordVisibility()">
+            <i [class]="showConfirmPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+          </button>
+        </div>
+        <small class="error-message" *ngIf="errors.confirmPassword">
+          <i class="bi bi-exclamation-circle"></i> {{ errors.confirmPassword }}
+        </small>
+        <small class="success-message" *ngIf="!errors.confirmPassword && formData.confirmPassword && formData.password === formData.confirmPassword">
+          <i class="bi bi-check-circle"></i> Las contraseñas coinciden
+        </small>
+      </div>
+
+      <!-- Botones -->
+      <div class="form-actions">
+        <button type="submit" class="btn-register-submit">
+          <i class="bi bi-check-circle"></i> Crear Cuenta
+        </button>
+        <button type="button" class="btn-register-back" (click)="volverAlLogin()">
+          <i class="bi bi-arrow-left"></i> Volver al Login
+        </button>
+      </div>
+
+      <!-- Link a login -->
+      <div class="register-footer">
+        <p>¿Ya tienes una cuenta? <a (click)="volverAlLogin()" class="login-link">Inicia sesión aquí</a></p>
+      </div>
+    </form>
+  </div>
+
+  <!-- Imagen lateral decorativa -->
+  <div class="register-image">
+    <div class="image-overlay">
+      <h3><i class="bi bi-star-fill"></i> ¡Únete a UNIFIT!</h3>
+      <ul class="benefits-list">
+        <li><i class="bi bi-check-circle-fill"></i> Reserva tu espacio</li>
+        <li><i class="bi bi-check-circle-fill"></i> Rutinas personalizadas</li>
+        <li><i class="bi bi-check-circle-fill"></i> Seguimiento de progreso</li>
+        <li><i class="bi bi-check-circle-fill"></i> Horarios flexibles</li>
+      </ul>
+    </div>
+  </div>
+</div>

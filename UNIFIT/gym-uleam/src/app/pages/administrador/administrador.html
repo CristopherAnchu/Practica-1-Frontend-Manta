@@ -1,0 +1,439 @@
+﻿<div class="d-flex min-vh-100">
+  <aside class="sidebar-admin bg-dark text-white p-3">
+    <div class="sidebar-header mb-4">
+      <h4><i class="bi bi-shield-check"></i> Admin Panel</h4>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='dashboard'" (click)="mostrarDashboard()" style="cursor:pointer;">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='reservas'" (click)="mostrarReservas()" style="cursor:pointer;">
+          <i class="bi bi-calendar-check"></i> Reservas
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='usuarios'" (click)="mostrarUsuarios()" style="cursor:pointer;">
+          <i class="bi bi-people"></i> Gestionar Usuarios
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='asistencias'" (click)="mostrarAsistencias()" style="cursor:pointer;">
+          <i class="bi bi-clipboard-check"></i> Asistencias
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='equipos'" (click)="mostrarEquipos()" style="cursor:pointer;">
+          <i class="bi bi-cpu"></i> Equipos
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='rutinas'" (click)="mostrarRutinas()" style="cursor:pointer;">
+          <i class="bi bi-list-check"></i> Rutinas
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='incidencias'" (click)="mostrarIncidencias()" style="cursor:pointer;">
+          <i class="bi bi-exclamation-triangle"></i> Incidencias
+        </a>
+      </li>
+    </ul>
+    <hr class="border-secondary">
+    <div class="mt-auto">
+      <button class="btn btn-outline-light btn-sm w-100" (click)="cerrarSesion()">
+        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+  <main class="flex-fill p-4 main-content-admin">
+    <div *ngIf="view==='dashboard'" class="dashboard-section">
+      <div class="section-header-admin mb-4">
+        <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+        <p>Resumen general del sistema</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-3">
+          <div class="stat-card-admin">
+            <div class="stat-icon-admin bg-gradient-purple">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-content-admin">
+              <h3>{{ usersCount }}</h3>
+              <p>Usuarios</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card-admin">
+            <div class="stat-icon-admin bg-gradient-pink">
+              <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div class="stat-content-admin">
+              <h3>{{ reservasCount }}</h3>
+              <p>Reservas</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card-admin">
+            <div class="stat-icon-admin bg-gradient-blue">
+              <i class="bi bi-cpu-fill"></i>
+            </div>
+            <div class="stat-content-admin">
+              <h3>{{ equiposCount }}</h3>
+              <p>Equipos</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card-admin">
+            <div class="stat-icon-admin bg-gradient-green">
+              <i class="bi bi-clipboard-check-fill"></i>
+            </div>
+            <div class="stat-content-admin">
+              <h3>{{ asistenciasCount }}</h3>
+              <p>Asistencias</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="welcome-card">
+            <i class="bi bi-emoji-smile"></i>
+            <h4>Bienvenido al Panel de Administración</h4>
+            <p>Gestiona todas las operaciones del gimnasio desde aquí</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="view==='reservas'" class="reservas-admin-section">
+      <div class="section-header-admin mb-4">
+        <h2><i class="bi bi-calendar-check"></i> Gestión de Reservas</h2>
+        <p>Administra y confirma las reservas de los usuarios</p>
+      </div>
+      <div *ngIf="reservas.length === 0" class="empty-state">
+        <i class="bi bi-calendar-x"></i>
+        <h4>No hay reservas registradas</h4>
+        <p>Las reservas aparecerán aquí cuando los usuarios las creen</p>
+      </div>
+      <div class="table-responsive" *ngIf="reservas.length > 0">
+        <table class="table-modern">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Duración</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let reserva of reservas">
+              <td>
+                <div class="user-cell">
+                  <i class="bi bi-person-circle"></i>
+                  <span>{{ getUsuarioNombre(reserva.usuarioId) }}</span>
+                </div>
+              </td>
+              <td>{{ reserva.fecha }}</td>
+              <td><span class="badge-time">{{ reserva.hora }}</span></td>
+              <td>{{ reserva.duracion }} hora(s)</td>
+              <td>
+                <span class="badge-status" [ngClass]="{'status-pendiente': reserva.estado === 'PENDIENTE','status-confirmada': reserva.estado === 'CONFIRMADA','status-cancelada': reserva.estado === 'CANCELADA'}">
+                  {{ reserva.estado || 'PENDIENTE' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-action btn-confirm" (click)="confirmarReserva(reserva)" *ngIf="reserva.estado !== 'CONFIRMADA'" title="Confirmar">
+                    <i class="bi bi-check-circle"></i>
+                  </button>
+                  <button class="btn-action btn-delete" (click)="cancelarReserva(reserva)" title="Cancelar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div *ngIf="view==='usuarios'" class="usuarios-admin-section">
+      <div class="section-header-admin mb-4">
+        <h2><i class="bi bi-people"></i> Gestión de Usuarios</h2>
+        <p>Administra los perfiles de los usuarios registrados</p>
+      </div>
+      <div class="users-grid">
+        <div class="user-card" *ngFor="let usuario of usuarios">
+          <div class="user-card-header">
+            <i class="bi bi-person-circle"></i>
+            <span class="badge-role" [ngClass]="{'role-admin': usuario.rol === 'ADMINISTRADOR'}">{{ usuario.rol }}</span>
+          </div>
+          <div class="user-card-body">
+            <h5>{{ usuario.nombre }}</h5>
+            <p><i class="bi bi-envelope"></i> {{ usuario.email }}</p>
+            <p *ngIf="usuario.telefono"><i class="bi bi-phone"></i> {{ usuario.telefono }}</p>
+          </div>
+          <div class="user-card-footer">
+            <button class="btn-edit" (click)="editarUsuario(usuario)">
+              <i class="bi bi-pencil"></i> Editar
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-overlay" *ngIf="usuarioEditando" (click)="cancelarEdicion()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header-custom">
+            <h4><i class="bi bi-pencil-square"></i> Editar Usuario</h4>
+            <button class="btn-close-modal" (click)="cancelarEdicion()">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="modal-body-custom">
+            <div class="mb-3">
+              <label class="form-label-modern">Nombre</label>
+              <input type="text" class="form-control-modern" [(ngModel)]="usuarioEditando.nombre">
+            </div>
+            <div class="mb-3">
+              <label class="form-label-modern">Email</label>
+              <input type="email" class="form-control-modern" [(ngModel)]="usuarioEditando.email">
+            </div>
+            <div class="mb-3">
+              <label class="form-label-modern">Teléfono</label>
+              <input type="tel" class="form-control-modern" [(ngModel)]="usuarioEditando.telefono">
+            </div>
+            <div class="mb-3">
+              <label class="form-label-modern">Rol</label>
+              <select class="form-control-modern" [(ngModel)]="usuarioEditando.rol">
+                <option value="CLIENTE">Cliente</option>
+                <option value="ADMINISTRADOR">Administrador</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer-custom">
+            <button class="btn-cancel" (click)="cancelarEdicion()">Cancelar</button>
+            <button class="btn-save" (click)="guardarUsuario()">Guardar Cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="view==='asistencias'" class="asistencias-admin-section">
+      <div class="section-header-admin mb-4">
+        <h2><i class="bi bi-clipboard-check"></i> Control de Asistencias</h2>
+        <p>Registra la asistencia de los usuarios a sus reservas</p>
+      </div>
+      <div *ngIf="reservas.length === 0" class="empty-state">
+        <i class="bi bi-clipboard-x"></i>
+        <h4>No hay reservas para registrar</h4>
+      </div>
+      <div class="table-responsive" *ngIf="reservas.length > 0">
+        <table class="table-modern">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Estado Reserva</th>
+              <th>Asistencia</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let reserva of reservas">
+              <td>
+                <div class="user-cell">
+                  <i class="bi bi-person-circle"></i>
+                  <span>{{ getUsuarioNombre(reserva.usuarioId) }}</span>
+                </div>
+              </td>
+              <td>{{ reserva.fecha }}</td>
+              <td><span class="badge-time">{{ reserva.hora }}</span></td>
+              <td>
+                <span class="badge-status" [ngClass]="{'status-pendiente': reserva.estado === 'PENDIENTE','status-confirmada': reserva.estado === 'CONFIRMADA'}">
+                  {{ reserva.estado || 'PENDIENTE' }}
+                </span>
+              </td>
+              <td>
+                <span class="badge-asistencia" *ngIf="verificarAsistencia(reserva.id) !== null" [ngClass]="{'asistio': verificarAsistencia(reserva.id) === true,'no-asistio': verificarAsistencia(reserva.id) === false}">
+                  {{ verificarAsistencia(reserva.id) ? 'ASISTIÓ' : 'NO ASISTIÓ' }}
+                </span>
+                <span *ngIf="verificarAsistencia(reserva.id) === null" class="text-muted">Sin registrar</span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-action btn-success" (click)="marcarAsistencia(reserva, true)" title="Marcar asistió">
+                    <i class="bi bi-check-circle-fill"></i>
+                  </button>
+                  <button class="btn-action btn-danger" (click)="marcarAsistencia(reserva, false)" title="Marcar no asistió">
+                    <i class="bi bi-x-circle-fill"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div *ngIf="view==='equipos'" class="equipos-admin-section">
+      <div class="section-header-admin mb-4">
+        <h2><i class="bi bi-cpu"></i> Gestión de Equipos</h2>
+        <p>Administra el estado de las máquinas y equipos del gimnasio</p>
+      </div>
+      
+      <!-- Formulario para agregar nuevo equipo -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Agregar Nuevo Equipo</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label-modern">Nombre del equipo</label>
+              <input type="text" class="form-control-modern" [(ngModel)]="nuevoEquipo.nombre" placeholder="Ej: Cinta de correr">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label-modern">Tipo</label>
+              <input type="text" class="form-control-modern" [(ngModel)]="nuevoEquipo.tipo" placeholder="Ej: Cardio">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label-modern">Estado inicial</label>
+              <select class="form-control-modern" [(ngModel)]="nuevoEquipo.estado">
+                <option value="DISPONIBLE">Disponible</option>
+                <option value="MANTENIMIENTO">Mantenimiento</option>
+                <option value="FUERA_SERVICIO">Fuera de servicio</option>
+              </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button class="btn btn-primary w-100" (click)="agregarEquipo()">
+                <i class="bi bi-plus-lg"></i> Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid de equipos -->
+      <div class="equipos-grid">
+        <div class="equipo-card" *ngFor="let equipo of equipos">
+          <div class="equipo-icon">
+            <i class="bi bi-gear-wide-connected"></i>
+          </div>
+          <div class="equipo-info">
+            <h5>{{ equipo.nombre }}</h5>
+            <p class="equipo-tipo">{{ equipo.tipo }}</p>
+          </div>
+          <div class="equipo-estado mb-3">
+            <span class="badge-estado" [ngClass]="{'estado-disponible': equipo.estado === 'DISPONIBLE','estado-mantenimiento': equipo.estado === 'MANTENIMIENTO','estado-fuera': equipo.estado === 'FUERA_SERVICIO'}">
+              {{ equipo.estado }}
+            </span>
+          </div>
+          <div class="equipo-actions">
+            <label class="form-label-small mb-1">Cambiar estado:</label>
+            <select class="select-estado form-select form-select-sm" [(ngModel)]="equipo.estado" (change)="cambiarEstadoEquipo(equipo, equipo.estado)">
+              <option value="DISPONIBLE">Disponible</option>
+              <option value="MANTENIMIENTO">Mantenimiento</option>
+              <option value="FUERA_SERVICIO">Fuera de servicio</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de Incidencias -->
+    <div *ngIf="view==='incidencias'" class="incidencias-admin-section">
+      <div class="section-header-admin mb-4">
+        <h2><i class="bi bi-exclamation-triangle"></i> Gestión de Incidencias</h2>
+        <p>Revisa y gestiona las incidencias reportadas por los usuarios</p>
+      </div>
+      
+      <div *ngIf="incidencias.length === 0" class="empty-state">
+        <i class="bi bi-check-circle"></i>
+        <h4>No hay incidencias pendientes</h4>
+        <p>Todas las incidencias han sido resueltas</p>
+      </div>
+
+      <div class="row g-4" *ngIf="incidencias.length > 0">
+        <div class="col-md-6" *ngFor="let incidencia of incidencias">
+          <div class="incidencia-card">
+            <div class="incidencia-header">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h5 class="mb-1">{{ incidencia.asunto }}</h5>
+                  <small class="text-muted">
+                    <i class="bi bi-person-circle"></i> {{ getUsuarioNombre(incidencia.usuarioId) }}
+                  </small>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                  <span class="badge-prioridad" [ngClass]="{'prioridad-baja': incidencia.prioridad === 'BAJA','prioridad-media': incidencia.prioridad === 'MEDIA','prioridad-alta': incidencia.prioridad === 'ALTA'}">
+                    {{ incidencia.prioridad }}
+                  </span>
+                  <button class="btn-delete-small" (click)="eliminarIncidencia(incidencia)" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="incidencia-body">
+              <p class="mb-2">{{ incidencia.descripcion }}</p>
+              <small class="text-muted">
+                <i class="bi bi-calendar"></i> {{ incidencia.fecha }}
+              </small>
+            </div>
+            <div class="incidencia-footer">
+              <label class="form-label-small mb-1">Estado:</label>
+              <select class="form-select form-select-sm" [(ngModel)]="incidencia.estado" (change)="cambiarEstadoIncidencia(incidencia, incidencia.estado!)">
+                <option value="PENDIENTE">Pendiente</option>
+                <option value="EN_PROCESO">En proceso</option>
+                <option value="RESUELTA">Resuelta</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="view==='rutinas'" class="rutinas-admin-section">
+      <div class="section-header-admin mb-4">
+        <h2><i class="bi bi-list-check"></i> Rutinas de Ejercicio</h2>
+        <p>Visualiza las rutinas disponibles en el sistema</p>
+      </div>
+      <div *ngIf="rutinas.length === 0" class="empty-state">
+        <i class="bi bi-list-ul"></i>
+        <h4>No hay rutinas registradas</h4>
+        <p>Las rutinas predefinidas están disponibles para los usuarios</p>
+      </div>
+      <div class="row" *ngIf="rutinas.length > 0">
+        <div class="col-md-6 mb-4" *ngFor="let rutina of rutinas">
+          <div class="rutina-card-admin">
+            <div class="rutina-header-admin">
+              <h5><i class="bi bi-trophy"></i> {{ rutina.nombre }}</h5>
+              <span class="badge-nivel" [ngClass]="{'nivel-principiante': rutina.nivel === 'PRINCIPIANTE','nivel-intermedio': rutina.nivel === 'INTERMEDIO','nivel-avanzado': rutina.nivel === 'AVANZADO'}">
+                {{ rutina.nivel }}
+              </span>
+            </div>
+            <p class="rutina-descripcion">{{ rutina.descripcion }}</p>
+            <table class="table-rutina">
+              <thead>
+                <tr>
+                  <th>Ejercicio</th>
+                  <th>Series</th>
+                  <th>Reps</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let ej of rutina.ejercicios">
+                  <td>{{ ej.ejercicio }}</td>
+                  <td>{{ ej.series }}</td>
+                  <td>{{ ej.repeticiones }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

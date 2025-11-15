@@ -1,0 +1,108 @@
+/* You can add global styles to this file, and also import other style files */
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+@import "flatpickr/dist/flatpickr.min.css";
+
+/* ============================================
+   CUSTOM FLATPICKR STYLES
+   ============================================ */
+
+.flatpickr-calendar {
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
+  border: none !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+.flatpickr-months {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-radius: 16px 16px 0 0 !important;
+  padding: 15px 10px !important;
+}
+
+.flatpickr-current-month {
+  color: white !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+.flatpickr-month {
+  color: white !important;
+}
+
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  fill: white !important;
+  padding: 10px !important;
+}
+
+.flatpickr-prev-month:hover,
+.flatpickr-next-month:hover {
+  fill: rgba(255,255,255,0.8) !important;
+}
+
+.flatpickr-weekdays {
+  background: #f8f9fa !important;
+  padding: 10px 0 !important;
+}
+
+.flatpickr-weekday {
+  color: #667eea !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+.flatpickr-days {
+  padding: 10px !important;
+}
+
+.flatpickr-day {
+  border-radius: 10px !important;
+  margin: 2px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.flatpickr-day:hover {
+  background: #e9ecef !important;
+  border-color: #667eea !important;
+  transform: scale(1.05) !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-color: #667eea !important;
+  color: white !important;
+  font-weight: 700 !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+}
+
+.flatpickr-day.today {
+  border: 2px solid #667eea !important;
+  font-weight: 700 !important;
+}
+
+.flatpickr-day.today:hover {
+  border-color: #667eea !important;
+  background: #e9ecef !important;
+}
+
+.flatpickr-day.disabled,
+.flatpickr-day.disabled:hover {
+  color: #dee2e6 !important;
+  cursor: not-allowed !important;
+  background: transparent !important;
+}
+
+/* Global body styles */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f5f7fa;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}

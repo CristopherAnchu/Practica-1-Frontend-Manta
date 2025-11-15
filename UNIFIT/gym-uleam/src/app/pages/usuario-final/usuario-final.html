@@ -1,0 +1,473 @@
+<div class="d-flex min-vh-100">
+  <!-- Sidebar -->
+  <aside class="bg-dark text-white p-3 sidebar">
+    <h4 class="mb-4">Panel Usuario</h4>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='reservar'" (click)="mostrarReservar()" style="cursor:pointer;">
+          <i class="bi bi-calendar-plus"></i> Reservar
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='misReservas'" (click)="mostrarMisReservas()" style="cursor:pointer;">
+          <i class="bi bi-calendar-check"></i> Mis reservas
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='rutinas'" (click)="mostrarRutinas()" style="cursor:pointer;">
+          <i class="bi bi-list-check"></i> Rutinas de ejercicio
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" [class.active]="view==='incidencias'" (click)="mostrarIncidencias()" style="cursor:pointer;">
+          <i class="bi bi-exclamation-triangle"></i> Incidencias
+        </a>
+      </li>
+    </ul>
+    <hr class="border-secondary">
+    <div class="mt-auto">
+      <button class="btn btn-outline-light btn-sm w-100" (click)="cerrarSesion()">
+        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-fill p-4">
+    <!-- Reservar -->
+    <div *ngIf="view==='reservar'" class="reservar-section">
+      <div class="section-header mb-4">
+        <h2 class="display-6 fw-bold text-primary">
+          <i class="bi bi-calendar-heart"></i> Reservar tu cita
+        </h2>
+        <p class="text-muted">Selecciona tu fecha y horario preferido para tu entrenamiento</p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Panel de selección -->
+        <div class="col-lg-5">
+          <!-- Paso 1: Fecha -->
+          <div class="step-card mb-3">
+            <div class="step-header">
+              <span class="step-number">1</span>
+              <h5 class="mb-0">Selecciona la fecha</h5>
+            </div>
+            <div class="step-body">
+              <div class="calendar-input-wrapper">
+                <i class="bi bi-calendar3 calendar-icon"></i>
+                <input #fechaInput class="form-control form-control-lg calendar-input" placeholder="Haz clic para elegir fecha" readonly />
+              </div>
+              <div class="info-badge mt-2">
+                <i class="bi bi-clock"></i> Horarios disponibles: 08:00 - 16:00
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 2: Duración (aparece cuando hay fecha) -->
+          <div *ngIf="fechaSeleccionada" class="step-card mb-3 animate-fade-in">
+            <div class="step-header">
+              <span class="step-number">2</span>
+              <h5 class="mb-0">Duración de tu sesión</h5>
+            </div>
+            <div class="step-body">
+              <div class="duration-options">
+                <div class="duration-card" [class.selected]="duracion === 1" (click)="duracion = 1; generarHorariosDisponibles()">
+                  <input class="form-check-input" type="radio" name="duracion" id="dur1" value="1" [(ngModel)]="duracion" (change)="generarHorariosDisponibles()" hidden />
+                  <i class="bi bi-hourglass-split"></i>
+                  <div class="duration-label">1 hora</div>
+                  <small>Sesión estándar</small>
+                </div>
+                <div class="duration-card" [class.selected]="duracion === 2" (click)="duracion = 2; generarHorariosDisponibles()">
+                  <input class="form-check-input" type="radio" name="duracion" id="dur2" value="2" [(ngModel)]="duracion" (change)="generarHorariosDisponibles()" hidden />
+                  <i class="bi bi-hourglass"></i>
+                  <div class="duration-label">2 horas</div>
+                  <small>Sesión extendida</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 3: Horario (aparece cuando hay duración) -->
+          <div *ngIf="fechaSeleccionada && duracion" class="step-card animate-fade-in">
+            <div class="step-header">
+              <span class="step-number">3</span>
+              <h5 class="mb-0">Elige tu horario</h5>
+            </div>
+            <div class="step-body">
+              <div class="time-slots-grid">
+                <button *ngFor="let slot of horariosDisponibles"
+                        class="time-slot-btn"
+                        [class.disabled]="slot.reservado"
+                        [class.selected]="horarioSeleccionado===slot.hora"
+                        [disabled]="slot.reservado"
+                        (click)="onHorarioSeleccionado(slot.hora)">
+                  <i class="bi" [class.bi-check-circle-fill]="horarioSeleccionado===slot.hora" [class.bi-clock]="horarioSeleccionado!==slot.hora && !slot.reservado" [class.bi-x-circle]="slot.reservado"></i>
+                  <span>{{slot.hora}}</span>
+                </button>
+              </div>
+
+              <div *ngIf="horarioSeleccionado" class="mt-4 animate-fade-in">
+                <button class="btn btn-success btn-lg w-100 confirm-btn" (click)="confirmarReserva()">
+                  <i class="bi bi-check-circle"></i> Confirmar reserva
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel de resumen -->
+        <div class="col-lg-7">
+          <div class="summary-card">
+            <div class="summary-header">
+              <i class="bi bi-info-circle"></i>
+              <h5>Resumen de tu reserva</h5>
+            </div>
+            <div class="summary-body">
+              
+              <div *ngIf="!fechaSeleccionada" class="empty-state">
+                <i class="bi bi-calendar-x"></i>
+                <p>Selecciona una fecha para comenzar</p>
+              </div>
+
+              <div *ngIf="fechaSeleccionada" class="selection-info animate-fade-in">
+                <div class="info-item">
+                  <div class="info-icon bg-primary">
+                    <i class="bi bi-calendar-event"></i>
+                  </div>
+                  <div class="info-content">
+                    <label>Fecha seleccionada</label>
+                    <div class="value">{{ fechaSeleccionada | date:'fullDate' }}</div>
+                  </div>
+                </div>
+
+                <div *ngIf="duracion" class="info-item animate-fade-in">
+                  <div class="info-icon bg-success">
+                    <i class="bi bi-hourglass-split"></i>
+                  </div>
+                  <div class="info-content">
+                    <label>Duración</label>
+                    <div class="value">{{ duracion }} hora{{ duracion > 1 ? 's' : '' }}</div>
+                  </div>
+                </div>
+
+                <div *ngIf="horarioSeleccionado" class="info-item animate-fade-in">
+                  <div class="info-icon bg-info">
+                    <i class="bi bi-clock"></i>
+                  </div>
+                  <div class="info-content">
+                    <label>Horario</label>
+                    <div class="value">{{ horarioSeleccionado }} - {{ sumarHoras(horarioSeleccionado, duracion ?? 1) }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <hr class="my-4">
+
+              <div class="reservas-dia-section">
+                <h6 class="mb-3">
+                  <i class="bi bi-people"></i> Reservas de este día
+                </h6>
+                <div *ngIf="!fechaSeleccionada" class="text-muted text-center py-3">
+                  <small>Selecciona una fecha para ver las reservas</small>
+                </div>
+                <div *ngIf="fechaSeleccionada && !hayReservasEnFecha" class="alert alert-success">
+                  <i class="bi bi-check-circle"></i> ¡Día libre! No hay reservas aún
+                </div>
+                <div *ngIf="fechaSeleccionada && hayReservasEnFecha" class="reservas-list">
+                  <div *ngFor="let r of reservasDelDia" class="reserva-item">
+                    <span class="reserva-badge" [class.my-reserva]="r.usuario === usuarioActual">
+                      <i class="bi" [class.bi-person-check]="r.usuario === usuarioActual" [class.bi-person]="r.usuario !== usuarioActual"></i>
+                      {{ r.hora }}
+                    </span>
+                    <span class="reserva-info">
+                      {{ r.duracion }}h
+                      <span class="badge bg-warning text-dark ms-2" *ngIf="r.usuario === usuarioActual">Tu reserva</span>
+                      <span class="badge bg-secondary ms-2" *ngIf="r.usuario !== usuarioActual">Ocupado</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mis reservas -->
+    <div *ngIf="view==='misReservas'" class="mis-reservas-section">
+      <div class="section-header mb-4">
+        <h2 class="display-6 fw-bold text-primary">
+          <i class="bi bi-calendar-check"></i> Mis Reservas
+        </h2>
+        <p class="text-muted">Gestiona tus citas programadas en el gimnasio</p>
+      </div>
+
+      <!-- Estado vacío -->
+      <div *ngIf="reservasUsuario.length === 0" class="empty-reservas-state">
+        <div class="empty-icon">
+          <i class="bi bi-calendar-x"></i>
+        </div>
+        <h4>No tienes reservas aún</h4>
+        <p class="text-muted">Comienza reservando tu primera sesión de entrenamiento</p>
+        <button class="btn btn-primary btn-lg mt-3" (click)="mostrarReservar()">
+          <i class="bi bi-plus-circle"></i> Hacer una reserva
+        </button>
+      </div>
+
+      <!-- Lista de reservas -->
+      <div *ngIf="reservasUsuario.length > 0" class="reservas-grid">
+        <div *ngFor="let r of reservasUsuario; let i = index" class="reserva-card animate-fade-in" [style.animation-delay]="(i * 0.1) + 's'">
+          <div class="reserva-card-header">
+            <div class="reserva-icon">
+              <i class="bi bi-calendar-event"></i>
+            </div>
+            <div class="reserva-status">
+              <span class="status-badge" [class.status-pendiente]="r.estado === 'PENDIENTE'" 
+                                        [class.status-confirmada]="r.estado === 'CONFIRMADA'"
+                                        [class.status-cancelada]="r.estado === 'CANCELADA'">
+                <i class="bi" [class.bi-clock]="r.estado === 'PENDIENTE'"
+                              [class.bi-check-circle]="r.estado === 'CONFIRMADA'"
+                              [class.bi-x-circle]="r.estado === 'CANCELADA'"></i>
+                {{ r.estado || 'PENDIENTE' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="reserva-card-body">
+            <div class="reserva-info-item">
+              <i class="bi bi-calendar3 info-icon"></i>
+              <div class="info-details">
+                <label>Fecha</label>
+                <div class="info-value">{{ r.fecha | date:'fullDate':'':'es' }}</div>
+              </div>
+            </div>
+
+            <div class="reserva-info-item">
+              <i class="bi bi-clock info-icon"></i>
+              <div class="info-details">
+                <label>Horario</label>
+                <div class="info-value">{{ r.hora }} - {{ sumarHoras(r.hora, r.duracion) }}</div>
+              </div>
+            </div>
+
+            <div class="reserva-info-item">
+              <i class="bi bi-hourglass-split info-icon"></i>
+              <div class="info-details">
+                <label>Duración</label>
+                <div class="info-value">{{ r.duracion }} hora{{ r.duracion > 1 ? 's' : '' }}</div>
+              </div>
+            </div>
+
+            <div class="reserva-countdown" *ngIf="getDaysUntil(r.fecha) >= 0">
+              <i class="bi bi-alarm"></i>
+              <span *ngIf="getDaysUntil(r.fecha) === 0" class="text-warning fw-bold">¡Hoy es tu reserva!</span>
+              <span *ngIf="getDaysUntil(r.fecha) === 1">Mañana</span>
+              <span *ngIf="getDaysUntil(r.fecha) > 1">En {{ getDaysUntil(r.fecha) }} días</span>
+            </div>
+          </div>
+
+          <div class="reserva-card-footer">
+            <button class="btn btn-outline-primary btn-sm" (click)="verDetalleReserva(r)">
+              <i class="bi bi-eye"></i> Ver detalle
+            </button>
+            <button class="btn btn-danger btn-sm" (click)="cancelarReserva(r)">
+              <i class="bi bi-trash"></i> Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen estadístico -->
+      <div *ngIf="reservasUsuario.length > 0" class="reservas-stats mt-4">
+        <div class="stat-card">
+          <div class="stat-icon bg-primary">
+            <i class="bi bi-calendar-check"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ reservasUsuario.length }}</div>
+            <div class="stat-label">Total de reservas</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-success">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ getProximasReservas() }}</div>
+            <div class="stat-label">Próximas</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-info">
+            <i class="bi bi-hourglass-split"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ getTotalHoras() }}h</div>
+            <div class="stat-label">Horas reservadas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rutinas de ejercicio -->
+    <div *ngIf="view==='rutinas'">
+      <h2 class="mb-3">Rutinas de Ejercicio</h2>
+      <p class="text-muted">Aquí encontrarás rutinas predefinidas para diferentes grupos musculares. Estas son guías de referencia para tu entrenamiento.</p>
+      
+      <div class="row">
+        <div class="col-md-6 mb-4" *ngFor="let rutina of rutinasPredefinidas">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0"><i class="bi bi-trophy"></i> {{ rutina.nombre }}</h5>
+            </div>
+            <div class="card-body">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Ejercicio</th>
+                    <th class="text-center">Series</th>
+                    <th class="text-center">Repeticiones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let ej of rutina.ejercicios">
+                    <td>{{ ej.ejercicio }}</td>
+                    <td class="text-center"><span class="badge bg-secondary">{{ ej.series }}</span></td>
+                    <td class="text-center"><span class="badge bg-info">{{ ej.repeticiones }}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-warning mt-3">
+        <i class="bi bi-exclamation-triangle"></i> <strong>Nota:</strong> Estas rutinas son referenciales. Consulta con un entrenador antes de comenzar cualquier programa de ejercicios.
+      </div>
+    </div>
+
+    <!-- Sección Incidencias -->
+    <div *ngIf="view==='incidencias'" class="incidencias-section">
+      <div class="section-header">
+        <h2><i class="bi bi-exclamation-triangle-fill"></i> Reportar Incidencia</h2>
+        <p class="mb-0">¿Tienes algún problema o sugerencia? Háznoslo saber y lo atenderemos pronto.</p>
+      </div>
+
+      <div class="incidencia-form-container">
+        <div class="row">
+          <div class="col-lg-8">
+            <div class="form-card">
+              <div class="form-header">
+                <i class="bi bi-pencil-square"></i>
+                <h4>Formulario de Incidencia</h4>
+              </div>
+
+              <div class="form-body">
+                <div class="mb-4">
+                  <label class="form-label">
+                    <i class="bi bi-tag"></i> Asunto <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control form-control-modern" 
+                    [(ngModel)]="incidenciaForm.asunto"
+                    placeholder="Ej: Equipo dañado, problema en reserva, sugerencia..."
+                    maxlength="100">
+                  <small class="text-muted">{{ incidenciaForm.asunto.length }}/100 caracteres</small>
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label">
+                    <i class="bi bi-flag"></i> Prioridad
+                  </label>
+                  <div class="priority-selector">
+                    <div class="priority-option" 
+                         [class.selected]="incidenciaForm.prioridad === 'BAJA'"
+                         (click)="incidenciaForm.prioridad = 'BAJA'">
+                      <i class="bi bi-circle-fill text-success"></i>
+                      <span>Baja</span>
+                    </div>
+                    <div class="priority-option" 
+                         [class.selected]="incidenciaForm.prioridad === 'MEDIA'"
+                         (click)="incidenciaForm.prioridad = 'MEDIA'">
+                      <i class="bi bi-circle-fill text-warning"></i>
+                      <span>Media</span>
+                    </div>
+                    <div class="priority-option" 
+                         [class.selected]="incidenciaForm.prioridad === 'ALTA'"
+                         (click)="incidenciaForm.prioridad = 'ALTA'">
+                      <i class="bi bi-circle-fill text-danger"></i>
+                      <span>Alta</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label">
+                    <i class="bi bi-chat-left-text"></i> Descripción <span class="text-danger">*</span>
+                  </label>
+                  <textarea 
+                    class="form-control form-control-modern" 
+                    [(ngModel)]="incidenciaForm.descripcion"
+                    rows="6"
+                    placeholder="Describe el problema o sugerencia con el mayor detalle posible..."
+                    maxlength="500"></textarea>
+                  <small class="text-muted">{{ incidenciaForm.descripcion.length }}/500 caracteres</small>
+                </div>
+
+                <div class="form-actions">
+                  <button class="btn btn-primary btn-modern" (click)="enviarIncidencia()">
+                    <i class="bi bi-send-fill"></i> Enviar Incidencia
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="info-card">
+              <div class="info-card-header">
+                <i class="bi bi-info-circle-fill"></i>
+                <h5>Información</h5>
+              </div>
+              <div class="info-card-body">
+                <div class="info-item">
+                  <i class="bi bi-clock"></i>
+                  <div>
+                    <strong>Tiempo de respuesta</strong>
+                    <p>Normalmente respondemos en 24-48 horas</p>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <i class="bi bi-bell"></i>
+                  <div>
+                    <strong>Notificaciones</strong>
+                    <p>Te notificaremos cuando tu incidencia sea atendida</p>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <i class="bi bi-shield-check"></i>
+                  <div>
+                    <strong>Confidencialidad</strong>
+                    <p>Tus datos están protegidos y seguros</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tips-card mt-3">
+              <h6><i class="bi bi-lightbulb"></i> Consejos útiles</h6>
+              <ul>
+                <li>Sé específico en tu descripción</li>
+                <li>Incluye detalles relevantes</li>
+                <li>Indica la urgencia correctamente</li>
+                <li>Revisa antes de enviar</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

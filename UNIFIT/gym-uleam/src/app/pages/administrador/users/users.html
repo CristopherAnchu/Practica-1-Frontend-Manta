@@ -1,0 +1,42 @@
+<div class="container mt-3">
+  <h3>Administrar Usuarios</h3>
+
+  <form id="u_form" (submit)="crearUsuario($event)" class="mb-3">
+    <div class="row g-2">
+      <div class="col-md-3">
+        <input id="u_nombre" class="form-control" placeholder="Nombre" />
+      </div>
+      <div class="col-md-3">
+        <input id="u_email" class="form-control" placeholder="Email" type="email" required />
+      </div>
+      <div class="col-md-2">
+        <input id="u_password" class="form-control" placeholder="Password" type="password" required />
+      </div>
+      <div class="col-md-2">
+        <select id="u_tipo" class="form-select">
+          <option value="CLIENTE">Cliente</option>
+          <option value="ADMINISTRADOR">Administrador</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-success">Crear</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table table-striped">
+    <thead>
+      <tr><th>Nombre</th><th>Email</th><th>Tipo</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let u of users">
+        <td>{{u.nombre}}</td>
+        <td>{{u.email}}</td>
+        <td>{{u.tipo}}</td>
+        <td>
+          <button (click)="eliminar(u.id)" class="btn btn-sm btn-danger">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

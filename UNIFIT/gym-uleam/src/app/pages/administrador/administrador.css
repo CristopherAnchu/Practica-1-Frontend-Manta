@@ -1,0 +1,157 @@
+/* Sidebar Admin */
+.sidebar-admin{width:250px;min-height:100vh;display:flex;flex-direction:column}
+.sidebar-admin .nav-link{transition:all .3s;border-radius:8px;margin-bottom:8px;padding:12px 16px}
+.sidebar-admin .nav-link:hover{background:rgba(255,255,255,.1);transform:translateX(5px)}
+.sidebar-admin .nav-link.active{background:linear-gradient(135deg,#667eea,#764ba2);font-weight:600;box-shadow:0 5px 15px rgba(102,126,234,.3)}
+.sidebar-admin .nav-link i{margin-right:10px;font-size:1.2rem}
+.sidebar-header{text-align:center;padding:1rem 0;border-bottom:2px solid rgba(255,255,255,.1)}
+
+/* Main Content */
+.main-content-admin{background:#f8f9fa;min-height:100vh}
+.section-header-admin{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:2rem;border-radius:20px;box-shadow:0 10px 30px rgba(102,126,234,.3)}
+.section-header-admin h2{margin:0;font-size:2rem;font-weight:700;display:flex;align-items:center;gap:1rem}
+.section-header-admin h2 i{font-size:2.5rem}
+.section-header-admin p{margin:0;opacity:.9;font-size:1rem}
+
+/* Dashboard Stats */
+.stat-card-admin{background:white;border-radius:16px;padding:1.5rem;display:flex;align-items:center;gap:1.5rem;box-shadow:0 5px 20px rgba(0,0,0,.08);transition:all .3s}
+.stat-card-admin:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.stat-icon-admin{width:70px;height:70px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:white}
+.bg-gradient-purple{background:linear-gradient(135deg,#667eea,#764ba2)}
+.bg-gradient-pink{background:linear-gradient(135deg,#f093fb,#f5576c)}
+.bg-gradient-blue{background:linear-gradient(135deg,#4facfe,#00f2fe)}
+.bg-gradient-green{background:linear-gradient(135deg,#43e97b,#38f9d7)}
+.stat-content-admin h3{margin:0;font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-content-admin p{margin:0;color:#6c757d;font-weight:600;font-size:1rem}
+
+/* Welcome Card */
+.welcome-card{background:linear-gradient(135deg,rgba(102,126,234,.1),rgba(118,75,162,.1));border:2px solid rgba(102,126,234,.2);border-radius:20px;padding:3rem;text-align:center}
+.welcome-card i{font-size:4rem;color:#667eea;margin-bottom:1rem}
+.welcome-card h4{color:#667eea;font-weight:700;margin-bottom:.5rem}
+.welcome-card p{color:#6c757d;margin:0}
+
+/* Tables */
+.table-modern{width:100%;background:white;border-radius:16px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,.08)}
+.table-modern thead{background:linear-gradient(135deg,#667eea,#764ba2);color:white}
+.table-modern thead th{padding:1rem;font-weight:600;text-align:left;border:none}
+.table-modern tbody tr{border-bottom:1px solid #e9ecef;transition:all .2s}
+.table-modern tbody tr:hover{background:rgba(102,126,234,.05)}
+.table-modern tbody td{padding:1rem;border:none}
+.user-cell{display:flex;align-items:center;gap:.75rem}
+.user-cell i{font-size:1.5rem;color:#667eea}
+.badge-time{background:linear-gradient(135deg,#f093fb,#f5576c);color:white;padding:.4rem .8rem;border-radius:8px;font-size:.85rem;font-weight:600}
+.badge-status{padding:.4rem .8rem;border-radius:8px;font-size:.85rem;font-weight:600;text-transform:uppercase}
+.status-pendiente{background:#ffc107;color:#000}
+.status-confirmada{background:#28a745;color:white}
+.status-cancelada{background:#6c757d;color:white}
+
+/* Action Buttons */
+.action-buttons{display:flex;gap:.5rem}
+.btn-action{padding:.5rem .75rem;border:none;border-radius:8px;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center}
+.btn-action i{font-size:1.2rem}
+.btn-confirm{background:linear-gradient(135deg,#43e97b,#38f9d7);color:white}
+.btn-confirm:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(67,233,123,.4)}
+.btn-delete{background:linear-gradient(135deg,#f093fb,#f5576c);color:white}
+.btn-delete:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(245,87,108,.4)}
+.btn-success{background:#28a745;color:white}
+.btn-success:hover{background:#218838}
+.btn-danger{background:#dc3545;color:white}
+.btn-danger:hover{background:#c82333}
+
+/* Empty State */
+.empty-state{text-align:center;padding:4rem 2rem;background:white;border-radius:20px;box-shadow:0 5px 20px rgba(0,0,0,.05)}
+.empty-state i{font-size:5rem;color:#e0e0e0;margin-bottom:1.5rem}
+.empty-state h4{color:#666;margin-bottom:.5rem}
+.empty-state p{color:#999}
+
+/* Users Grid */
+.users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem}
+.user-card{background:white;border-radius:16px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,.08);transition:all .3s}
+.user-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.user-card-header{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:1.5rem;display:flex;justify-content:space-between;align-items:center}
+.user-card-header i{font-size:2.5rem}
+.badge-role{background:rgba(255,255,255,.25);padding:.4rem .8rem;border-radius:8px;font-size:.85rem;font-weight:600;backdrop-filter:blur(10px)}
+.role-admin{background:linear-gradient(135deg,#f093fb,#f5576c)}
+.user-card-body{padding:1.5rem}
+.user-card-body h5{margin-bottom:1rem;color:#495057;font-weight:700}
+.user-card-body p{color:#6c757d;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.user-card-body i{color:#667eea}
+.user-card-footer{padding:1rem 1.5rem;background:#f8f9fa;border-top:1px solid #e9ecef}
+.btn-edit{width:100%;padding:.6rem;border:none;border-radius:8px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;font-weight:600;cursor:pointer;transition:all .3s}
+.btn-edit:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(102,126,234,.3)}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(5px)}
+.modal-card{background:white;border-radius:20px;width:90%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:modalSlideIn .3s ease-out}
+@keyframes modalSlideIn{from{opacity:0;transform:translateY(-50px)}to{opacity:1;transform:translateY(0)}}
+.modal-header-custom{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:1.5rem;display:flex;justify-content:space-between;align-items:center;border-radius:20px 20px 0 0}
+.modal-header-custom h4{margin:0;display:flex;align-items:center;gap:.75rem}
+.btn-close-modal{background:rgba(255,255,255,.2);border:none;color:white;width:35px;height:35px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.btn-close-modal:hover{background:rgba(255,255,255,.3);transform:rotate(90deg)}
+.modal-body-custom{padding:2rem}
+.form-label-modern{font-weight:600;color:#495057;margin-bottom:.5rem;display:block}
+.form-control-modern{width:100%;border:2px solid #e9ecef;border-radius:12px;padding:.75rem 1rem;transition:all .3s;font-size:.95rem}
+.form-control-modern:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 .2rem rgba(102,126,234,.15)}
+.modal-footer-custom{padding:1.5rem;background:#f8f9fa;display:flex;gap:1rem;justify-content:flex-end;border-radius:0 0 20px 20px}
+.btn-cancel{padding:.75rem 1.5rem;border:2px solid #6c757d;background:white;color:#6c757d;border-radius:10px;font-weight:600;cursor:pointer;transition:all .3s}
+.btn-cancel:hover{background:#6c757d;color:white}
+.btn-save{padding:.75rem 1.5rem;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:10px;font-weight:600;cursor:pointer;transition:all .3s}
+.btn-save:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(102,126,234,.4)}
+
+/* Asistencias */
+.badge-asistencia{padding:.4rem .8rem;border-radius:8px;font-size:.85rem;font-weight:600;text-transform:uppercase}
+.asistio{background:#28a745;color:white}
+.no-asistio{background:#dc3545;color:white}
+
+/* Equipos */
+.equipos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;margin-top:1.5rem}
+.equipo-card{background:white;border-radius:16px;padding:1.5rem;box-shadow:0 5px 20px rgba(0,0,0,.08);transition:all .3s;display:flex;flex-direction:column;align-items:center;text-align:center}
+.equipo-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.equipo-icon{width:70px;height:70px;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:2.5rem;margin-bottom:1rem}
+.equipo-info{width:100%;margin-bottom:1rem}
+.equipo-info h5{margin:0 0 .5rem;color:#495057;font-weight:700}
+.equipo-tipo{margin:0;color:#6c757d;font-size:.9rem}
+.equipo-estado{width:100%;margin-bottom:1rem}
+.badge-estado{padding:.5rem 1rem;border-radius:12px;font-size:.85rem;font-weight:600;text-transform:uppercase;display:inline-block}
+.estado-disponible{background:#28a745;color:white}
+.estado-mantenimiento{background:#ffc107;color:#000}
+.estado-fuera{background:#dc3545;color:white}
+.equipo-actions{width:100%}
+.form-label-small{font-size:.85rem;font-weight:600;color:#6c757d;display:block}
+.select-estado{width:100%;padding:.6rem 1rem;border:2px solid #e9ecef;border-radius:10px;background:white;cursor:pointer;font-weight:600;transition:all .3s;font-size:.9rem}
+.select-estado:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 .2rem rgba(102,126,234,.15)}
+
+/* Incidencias */
+.incidencia-card{background:white;border-radius:16px;box-shadow:0 5px 20px rgba(0,0,0,.08);transition:all .3s;overflow:hidden}
+.incidencia-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.incidencia-header{background:linear-gradient(135deg,rgba(102,126,234,.1),rgba(118,75,162,.1));padding:1.25rem;border-bottom:2px solid rgba(102,126,234,.2)}
+.incidencia-header h5{color:#495057;font-weight:700;margin:0}
+.badge-prioridad{padding:.4rem .8rem;border-radius:8px;font-size:.8rem;font-weight:700;text-transform:uppercase}
+.prioridad-baja{background:#28a745;color:white}
+.prioridad-media{background:#ffc107;color:#000}
+.prioridad-alta{background:#dc3545;color:white}
+.incidencia-body{padding:1.25rem}
+.incidencia-body p{color:#495057;margin-bottom:1rem;line-height:1.6}
+.incidencia-footer{padding:1rem 1.25rem;background:#f8f9fa;border-top:1px solid #e9ecef}
+.btn-delete-small{background:linear-gradient(135deg,#f093fb,#f5576c);color:white;border:none;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.btn-delete-small:hover{transform:scale(1.1);box-shadow:0 5px 15px rgba(245,87,108,.4)}
+
+/* Rutinas Admin */
+.rutina-card-admin{background:white;border-radius:16px;padding:1.5rem;box-shadow:0 5px 20px rgba(0,0,0,.08);transition:all .3s}
+.rutina-card-admin:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.rutina-header-admin{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:1rem;border-bottom:2px solid #e9ecef}
+.rutina-header-admin h5{margin:0;color:#495057;font-weight:700;display:flex;align-items:center;gap:.5rem}
+.badge-nivel{padding:.4rem .8rem;border-radius:8px;font-size:.85rem;font-weight:600;text-transform:uppercase}
+.nivel-principiante{background:#28a745;color:white}
+.nivel-intermedio{background:#ffc107;color:#000}
+.nivel-avanzado{background:#dc3545;color:white}
+.rutina-descripcion{color:#6c757d;margin-bottom:1rem}
+.table-rutina{width:100%;font-size:.9rem}
+.table-rutina thead{background:#f8f9fa}
+.table-rutina th{padding:.75rem;text-align:left;font-weight:600;color:#495057}
+.table-rutina td{padding:.75rem;border-top:1px solid #e9ecef}
+
+@media (max-width:991px){
+  .sidebar-admin{width:100%;min-height:auto}
+  .users-grid,.equipos-grid{grid-template-columns:1fr}
+}
