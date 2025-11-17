@@ -1,0 +1,293 @@
+/* Estilos para Dashboard en Tiempo Real */
+
+/* Estado de conexión */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.connection-status.connected {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+  border: 2px solid #4caf50;
+}
+
+.connection-status.disconnected {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+  border: 2px solid #f44336;
+}
+
+.connection-status i {
+  font-size: 1.2rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Tarjetas de estadísticas */
+.stat-card {
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.stat-primary {
+  border-left: 4px solid #2196f3;
+}
+
+.stat-card.stat-success {
+  border-left: 4px solid #4caf50;
+}
+
+.stat-card.stat-info {
+  border-left: 4px solid #00bcd4;
+}
+
+.stat-card.stat-warning {
+  border-left: 4px solid #ff9800;
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+/* Tarjetas de sala */
+.room-card {
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.room-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Panel de notificaciones */
+.notifications-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+  transition: all 0.3s ease;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.notification-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notification-success {
+  background-color: rgba(76, 175, 80, 0.05);
+  border-left-color: #4caf50;
+}
+
+.notification-info {
+  background-color: rgba(33, 150, 243, 0.05);
+  border-left-color: #2196f3;
+}
+
+.notification-warning {
+  background-color: rgba(255, 152, 0, 0.05);
+  border-left-color: #ff9800;
+}
+
+.notification-error {
+  background-color: rgba(244, 67, 54, 0.05);
+  border-left-color: #f44336;
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.notification-success .notification-icon {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.notification-info .notification-icon {
+  background-color: rgba(33, 150, 243, 0.2);
+  color: #2196f3;
+}
+
+.notification-warning .notification-icon {
+  background-color: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+}
+
+.notification-error .notification-icon {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.notification-header strong {
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.notification-message {
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.notification-data {
+  padding: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.notification-data code {
+  font-size: 0.75rem;
+  color: #666;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Estadísticas del servidor */
+.server-room-card {
+  padding: 0.75rem;
+  background-color: rgba(0, 123, 255, 0.05);
+  border: 1px solid rgba(0, 123, 255, 0.2);
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Card general */
+.card {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+}
+
+/* Scrollbar personalizado */
+.notifications-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notifications-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.notifications-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.notifications-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stat-card {
+    margin-bottom: 1rem;
+  }
+  
+  .connection-status {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .notification-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* Animaciones */
+.fade-in {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Badge personalizado */
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}

@@ -1,0 +1,311 @@
+<div class="container-fluid py-4">
+  
+  <!-- Header con estado de conexión -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-0">
+            <i class="bi bi-broadcast me-2"></i>
+            Dashboard en Tiempo Real
+          </h2>
+          <small class="text-muted">WebSocket Server - Python</small>
+        </div>
+        
+        <div class="d-flex gap-2 align-items-center">
+          <!-- Estado de conexión -->
+          <div class="connection-status" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+            <i class="bi" [class.bi-wifi]="isConnected" [class.bi-wifi-off]="!isConnected"></i>
+            <span>{{ isConnected ? 'Conectado' : 'Desconectado' }}</span>
+          </div>
+          
+          <!-- Botones de acción -->
+          <button class="btn btn-primary" (click)="refreshDashboard()" [disabled]="!isConnected">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Actualizar
+          </button>
+          
+          <button class="btn btn-info" (click)="getServerStats()" [disabled]="!isConnected">
+            <i class="bi bi-bar-chart me-1"></i>
+            Stats
+          </button>
+          
+          <button class="btn btn-secondary" (click)="sendTestNotification()" [disabled]="!isConnected">
+            <i class="bi bi-bell me-1"></i>
+            Test
+          </button>
+        </div>
+      </div>
+      
+      <!-- ID de conexión -->
+      <div *ngIf="connectionId" class="mt-2">
+        <small class="text-muted">
+          <i class="bi bi-fingerprint me-1"></i>
+          ID: <code>{{ connectionId }}</code>
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje de no conexión -->
+  <div *ngIf="!isConnected" class="row">
+    <div class="col-12">
+      <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle fs-3 me-3"></i>
+        <div>
+          <h5 class="mb-1">No hay conexión con el servidor WebSocket</h5>
+          <p class="mb-0">
+            Asegúrate de que el servidor Python esté corriendo en <code>http://localhost:5000</code>
+          </p>
+          <small class="text-muted">
+            Comando: <code>cd websocket-server && python server.py</code>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Data -->
+  <div *ngIf="isConnected && dashboardData" class="row mb-4">
+    
+    <!-- Estadísticas Generales -->
+    <div class="col-12 mb-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h4>
+          <i class="bi bi-speedometer2 me-2"></i>
+          Estadísticas en Tiempo Real
+        </h4>
+        <small class="text-muted" *ngIf="lastUpdate">
+          <i class="bi bi-clock me-1"></i>
+          Última actualización: {{ lastUpdate | date:'HH:mm:ss' }}
+        </small>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card stat-card stat-primary">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Total Reservas</h6>
+              <h3 class="mb-0">{{ dashboardData.estadisticas.totalReservas }}</h3>
+            </div>
+            <div class="stat-icon bg-primary">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card stat-card stat-success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Reservas Activas</h6>
+              <h3 class="mb-0">{{ dashboardData.estadisticas.reservasActivas }}</h3>
+            </div>
+            <div class="stat-icon bg-success">
+              <i class="bi bi-check-circle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card stat-card stat-info">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">% Asistencia</h6>
+              <h3 class="mb-0">{{ dashboardData.estadisticas.porcentajeAsistencia | number:'1.1-1' }}%</h3>
+            </div>
+            <div class="stat-icon bg-info">
+              <i class="bi bi-person-check"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card stat-card stat-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Calificación</h6>
+              <h3 class="mb-0">
+                <i class="bi bi-star-fill text-warning me-1"></i>
+                {{ dashboardData.estadisticas.calificacionPromedio | number:'1.1-1' }}
+              </h3>
+            </div>
+            <div class="stat-icon bg-warning">
+              <i class="bi bi-star"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información de conexiones -->
+    <div class="col-12 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-people me-2"></i>
+            Conexiones Activas
+          </h5>
+          <div class="row">
+            <div class="col-md-3">
+              <div class="text-center p-3">
+                <i class="bi bi-wifi fs-1 text-success"></i>
+                <h4 class="mt-2">{{ dashboardData.usuariosConectados }}</h4>
+                <small class="text-muted">Usuarios Conectados</small>
+              </div>
+            </div>
+            <div class="col-md-9">
+              <h6 class="mb-3">Salas Activas:</h6>
+              <div class="row">
+                <div class="col-md-4 mb-2" *ngFor="let sala of dashboardData.salasActivas | keyvalue">
+                  <div class="room-card">
+                    <i class="bi bi-door-open me-2"></i>
+                    <strong>{{ sala.key }}</strong>
+                    <span class="badge bg-primary ms-2">{{ sala.value }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de Notificaciones -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-bell me-2"></i>
+            Notificaciones en Tiempo Real
+            <span class="badge bg-primary ms-2">{{ notifications.length }}</span>
+          </h5>
+          <button class="btn btn-sm btn-outline-danger" (click)="clearNotifications()" 
+                  [disabled]="notifications.length === 0">
+            <i class="bi bi-trash me-1"></i>
+            Limpiar
+          </button>
+        </div>
+        <div class="card-body">
+          
+          <!-- Sin notificaciones -->
+          <div *ngIf="notifications.length === 0" class="text-center text-muted py-4">
+            <i class="bi bi-bell-slash fs-1"></i>
+            <p class="mt-2">No hay notificaciones aún</p>
+            <small>Las notificaciones aparecerán aquí en tiempo real</small>
+          </div>
+
+          <!-- Lista de notificaciones -->
+          <div *ngIf="notifications.length > 0" class="notifications-list">
+            <div *ngFor="let notification of notifications; let i = index" 
+                 class="notification-item" 
+                 [ngClass]="getNotificationClass(notification.type)"
+                 [@slideIn]>
+              
+              <div class="notification-icon">
+                <i class="bi" [ngClass]="getNotificationIcon(notification.type)"></i>
+              </div>
+              
+              <div class="notification-content">
+                <div class="notification-header">
+                  <strong>{{ notification.type }}</strong>
+                  <span class="notification-time">
+                    {{ formatTimestamp(notification.timestamp) }}
+                  </span>
+                </div>
+                
+                <div class="notification-message" *ngIf="notification.message">
+                  {{ notification.message }}
+                </div>
+                
+                <div class="notification-data" *ngIf="notification.data">
+                  <small class="text-muted">
+                    <code>{{ notification.data | json }}</code>
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas del Servidor -->
+  <div class="row mt-4" *ngIf="serverStats">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-server me-2"></i>
+            Estadísticas del Servidor
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <h6>Total de Conexiones</h6>
+              <h3>{{ serverStats.totalConnections }}</h3>
+            </div>
+            <div class="col-md-8">
+              <h6>Salas del Servidor</h6>
+              <div class="row">
+                <div class="col-md-6 mb-2" *ngFor="let room of serverStats.rooms | keyvalue">
+                  <div class="server-room-card">
+                    <strong>{{ room.key }}</strong>
+                    <div>
+                      <span class="badge bg-info">{{ $any(room.value).members }} miembros</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <small class="text-muted">
+            <i class="bi bi-clock me-1"></i>
+            Timestamp: {{ serverStats.timestamp }}
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información de ayuda -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="alert alert-info">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-info-circle fs-3 me-3"></i>
+          <div>
+            <h6 class="mb-2">🚀 Dashboard en Tiempo Real con WebSocket</h6>
+            <p class="mb-2">
+              Este dashboard recibe actualizaciones automáticas cada 30 segundos del servidor Python WebSocket.
+              Todas las notificaciones se muestran instantáneamente cuando ocurren eventos en el sistema.
+            </p>
+            <ul class="mb-0">
+              <li>Servidor WebSocket: <code>http://localhost:5000</code></li>
+              <li>Sala actual: <code>dashboard</code></li>
+              <li>Actualizaciones automáticas: <strong>Activadas</strong></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

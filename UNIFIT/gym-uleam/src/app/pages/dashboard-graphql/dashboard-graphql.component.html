@@ -1,0 +1,309 @@
+<div class="container-fluid py-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">
+          <i class="bi bi-graph-up me-2"></i>
+          Dashboard GraphQL - Reportes en Tiempo Real
+        </h2>
+        <button class="btn btn-primary" (click)="recargarDatos()" [disabled]="loading">
+          <i class="bi bi-arrow-clockwise me-2"></i>
+          Recargar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3">Cargando datos desde GraphQL...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading && !error">
+    
+    <!-- Estadísticas Generales -->
+    <div class="row mb-4" *ngIf="estadisticas">
+      <div class="col-12 mb-3">
+        <h4><i class="bi bi-bar-chart me-2"></i>Estadísticas Generales</h4>
+      </div>
+      
+      <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Total Reservas</h6>
+                <h3 class="mb-0">{{ estadisticas.totalReservas }}</h3>
+              </div>
+              <div class="stat-icon bg-primary">
+                <i class="bi bi-calendar-check"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Reservas Activas</h6>
+                <h3 class="mb-0">{{ estadisticas.reservasActivas }}</h3>
+              </div>
+              <div class="stat-icon bg-success">
+                <i class="bi bi-check-circle"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">% Asistencia</h6>
+                <h3 class="mb-0">{{ estadisticas.porcentajeAsistencia | number:'1.1-1' }}%</h3>
+              </div>
+              <div class="stat-icon bg-info">
+                <i class="bi bi-person-check"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Calificación</h6>
+                <h3 class="mb-0">
+                  <i class="bi bi-star-fill text-warning me-1"></i>
+                  {{ estadisticas.calificacionPromedio | number:'1.1-1' }}
+                </h3>
+              </div>
+              <div class="stat-icon bg-warning">
+                <i class="bi bi-star"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Rutinas Populares -->
+      <div class="col-lg-6 mb-4">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-trophy me-2"></i>
+              Top 5 Rutinas Más Populares
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="rutinasPopulares.length === 0" class="text-center text-muted py-3">
+              No hay datos disponibles
+            </div>
+            <div class="table-responsive" *ngIf="rutinasPopulares.length > 0">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Rutina</th>
+                    <th>Reservas</th>
+                    <th>Ocupación</th>
+                    <th>Rating</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let rutina of rutinasPopulares; let i = index">
+                    <td>{{ i + 1 }}</td>
+                    <td>
+                      <strong>{{ rutina.nombreRutina }}</strong>
+                    </td>
+                    <td>
+                      <span class="badge bg-primary">{{ rutina.totalReservas }}</span>
+                    </td>
+                    <td>
+                      <div class="progress" style="height: 20px;">
+                        <div class="progress-bar" role="progressbar" 
+                             [style.width.%]="rutina.ocupacionPromedio"
+                             [ngClass]="{
+                               'bg-success': rutina.ocupacionPromedio < 60,
+                               'bg-warning': rutina.ocupacionPromedio >= 60 && rutina.ocupacionPromedio < 85,
+                               'bg-danger': rutina.ocupacionPromedio >= 85
+                             }">
+                          {{ rutina.ocupacionPromedio | number:'1.0-0' }}%
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span *ngIf="rutina.calificacionPromedio">
+                        <i class="bi bi-star-fill text-warning"></i>
+                        {{ rutina.calificacionPromedio | number:'1.1-1' }}
+                      </span>
+                      <span *ngIf="!rutina.calificacionPromedio" class="text-muted">N/A</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Usuarios Más Activos -->
+      <div class="col-lg-6 mb-4">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-people me-2"></i>
+              Top 5 Usuarios Más Activos
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="usuariosActivos.length === 0" class="text-center text-muted py-3">
+              No hay datos disponibles
+            </div>
+            <div class="table-responsive" *ngIf="usuariosActivos.length > 0">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Usuario</th>
+                    <th>Tipo</th>
+                    <th>Reservas</th>
+                    <th>Asistencia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let usuario of usuariosActivos; let i = index">
+                    <td>{{ i + 1 }}</td>
+                    <td>
+                      <div>
+                        <strong>{{ usuario.nombreUsuario }}</strong>
+                        <br>
+                        <small class="text-muted">{{ usuario.correo }}</small>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="{
+                        'bg-info': usuario.tipo === 'estudiante',
+                        'bg-warning': usuario.tipo === 'docente',
+                        'bg-secondary': usuario.tipo === 'administrativo'
+                      }">
+                        {{ usuario.tipo }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge bg-primary">{{ usuario.totalReservas }}</span>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="{
+                        'bg-success': usuario.porcentajeAsistencia >= 80,
+                        'bg-warning': usuario.porcentajeAsistencia >= 50 && usuario.porcentajeAsistencia < 80,
+                        'bg-danger': usuario.porcentajeAsistencia < 50
+                      }">
+                        {{ usuario.porcentajeAsistencia | number:'1.0-0' }}%
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reporte de Ocupación -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-pie-chart me-2"></i>
+              Reporte de Ocupación Actual
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="reporteOcupacion.length === 0" class="text-center text-muted py-3">
+              No hay datos de ocupación disponibles
+            </div>
+            <div class="row" *ngIf="reporteOcupacion.length > 0">
+              <div class="col-md-4 mb-3" *ngFor="let reporte of reporteOcupacion">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <h6 class="card-title mb-3">{{ reporte.nombreRutina }}</h6>
+                    <div class="mb-2">
+                      <small class="text-muted">Ocupación:</small>
+                      <div class="progress" style="height: 25px;">
+                        <div class="progress-bar" role="progressbar"
+                             [style.width.%]="reporte.porcentajeOcupacion"
+                             [ngClass]="{
+                               'bg-success': reporte.porcentajeOcupacion < 60,
+                               'bg-warning': reporte.porcentajeOcupacion >= 60 && reporte.porcentajeOcupacion < 85,
+                               'bg-danger': reporte.porcentajeOcupacion >= 85
+                             }">
+                          <strong>{{ reporte.porcentajeOcupacion | number:'1.0-0' }}%</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-3">
+                      <div class="text-center">
+                        <small class="text-muted d-block">Reservadas</small>
+                        <strong class="text-primary">{{ reporte.reservasActivas }}</strong>
+                      </div>
+                      <div class="text-center">
+                        <small class="text-muted d-block">Disponibles</small>
+                        <strong class="text-success">{{ reporte.cuposDisponibles }}</strong>
+                      </div>
+                      <div class="text-center">
+                        <small class="text-muted d-block">Capacidad</small>
+                        <strong>{{ reporte.cupoMaximo }}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información sobre GraphQL -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="alert alert-info">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle fs-3 me-3"></i>
+            <div>
+              <h6 class="mb-1">🚀 Datos en Tiempo Real con GraphQL</h6>
+              <p class="mb-0">
+                Este dashboard consume datos del servicio GraphQL en <code>http://localhost:4000/graphql</code>.
+                Todos los reportes y estadísticas se calculan en el servidor y se optimizan con consultas GraphQL.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
