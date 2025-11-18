@@ -35,7 +35,7 @@ func GetIncidenciasHandler(w http.ResponseWriter, r *http.Request) {
 	// 2. LÓGICA DE AUTORIZACIÓN: Filtrar por Rol
 	if authUser.Rol == "CLIENTE" {
 		// Un cliente solo puede ver sus propias incidencias
-		query = query.Where("usuario_id = ?", authUser.ID)
+		query = query.Where("\"usuarioId\" = ?", authUser.ID)
 	}
 	// Los Administradores (o cualquier otro rol) ven todas las incidencias.
 
@@ -220,7 +220,7 @@ func DeleteIncidenciaByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Verificar la propiedad antes de intentar eliminar
 	var incidencia models.Incidencia
-	findResult := db.DB.Select("usuario_id").First(&incidencia, "id = ?", id)
+	findResult := db.DB.Select("\"usuarioId\"").First(&incidencia, "id = ?", id)
 
 	if findResult.Error != nil {
 		if errors.Is(findResult.Error, gorm.ErrRecordNotFound) {

@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -30,12 +31,19 @@ func GetReservasHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var reservas []models.Reserva
-	query := db.DB // Inicializar el constructor de consultas
+	query := db.DB.Model(&models.Reserva{}) // Inicializar el constructor de consultas con el modelo
+
+	// DEBUG: Log para verificar el rol del usuario autenticado
+	log.Printf("🔍 DEBUG GetReservasHandler - Usuario ID: %s, Rol: '%s'", authUser.ID, authUser.Rol)
 
 	// 2. LÓGICA DE AUTORIZACIÓN: Filtrar por Rol
 	if authUser.Rol == "CLIENTE" {
 		// Un cliente solo puede ver sus propias reservas
-		query = query.Where("usuario_id = ?", authUser.ID)
+		// Usar "usuarioId" que es el nombre de la columna en GORM (tag column:usuarioId)
+		log.Printf("🔐 Filtrando reservas para CLIENTE: %s", authUser.ID)
+		query = query.Where("\"usuarioId\" = ?", authUser.ID)
+	} else {
+		log.Printf("👑 Rol '%s' - Mostrando todas las reservas (sin filtro)", authUser.Rol)
 	}
 	// Los Administradores (o cualquier otro rol) ven todas las reservas.
 
@@ -43,6 +51,8 @@ func GetReservasHandler(w http.ResponseWriter, r *http.Request) {
 	result := query.Find(&reservas)
 
 	if result.Error != nil {
+		// Log del error para debugging
+		println("ERROR en GetReservasHandler:", result.Error.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": "Database error",
@@ -109,6 +119,15 @@ func GetReservaByIDHandler(w http.ResponseWriter, r *http.Request) {
 //  POST: Crear nueva Reserva (Inyectando UsuarioID del contexto)
 //
 // =============================
+// Estructura temporal para recibir la reserva con fecha como string
+type ReservaInput struct {
+	Fecha    string  `json:"fecha"`
+	Hora     *string `json:"hora,omitempty"`
+	Duracion *int    `json:"duracion,omitempty"`
+	Estado   *string `json:"estado,omitempty"`
+	EquipoID *string `json:"equipoId,omitempty"`
+}
+
 func PostReservaHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -120,15 +139,34 @@ func PostReservaHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newReserva models.Reserva
+	var input ReservaInput
 
 	// 2. Decodificar el JSON de la solicitud
-	if err := json.NewDecoder(r.Body).Decode(&newReserva); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": "Invalid request payload: " + err.Error(),
 		})
 		return
+	}
+
+	// 2.1. Parsear la fecha del formato "YYYY-MM-DD" a time.Time
+	fecha, err := time.Parse("2006-01-02", input.Fecha)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid date format. Expected YYYY-MM-DD, got: " + input.Fecha,
+		})
+		return
+	}
+
+	// 2.2. Crear la reserva con la fecha parseada
+	newReserva := models.Reserva{
+		Fecha:    fecha,
+		Hora:     input.Hora,
+		Duracion: input.Duracion,
+		Estado:   input.Estado,
+		EquipoID: input.EquipoID,
 	}
 
 	// 🔥 3. INYECTAR/SOBREESCRIBIR el UsuarioID con el ID autenticado.
@@ -164,7 +202,7 @@ func PostReservaHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 5.1. Verificar si el USUARIO ya tiene una reserva en la misma fecha y hora
 	var userConflictReserva models.Reserva
-	userConflictCheck := db.DB.Where("usuario_id = ?", newReserva.UsuarioID). // Usamos el ID inyectado
+	userConflictCheck := db.DB.Where("\"usuarioId\" = ?", newReserva.UsuarioID). // Usamos el ID inyectado con el nombre correcto de columna
 											Where("fecha = ?", newReserva.Fecha).
 											Where("hora = ?", *newReserva.Hora).
 		// Solo verificamos conflictos con reservas PENDIENTES o CONFIRMADAS
@@ -191,7 +229,7 @@ func PostReservaHandler(w http.ResponseWriter, r *http.Request) {
 	// 5.2. Verificar disponibilidad del EQUIPO (SOLO si se especificó un equipo)
 	if newReserva.EquipoID != nil && *newReserva.EquipoID != "" {
 		var equipoConflictReserva models.Reserva
-		equipoConflictCheck := db.DB.Where("equipo_id = ?", *newReserva.EquipoID).
+		equipoConflictCheck := db.DB.Where("\"equipoId\" = ?", *newReserva.EquipoID).
 			Where("fecha = ?", newReserva.Fecha).
 			Where("hora = ?", *newReserva.Hora).
 			// Solo verificamos conflictos con reservas PENDIENTES o CONFIRMADAS
@@ -333,7 +371,7 @@ func DeleteReservaByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Verificar la propiedad antes de intentar eliminar
 	var reserva models.Reserva
-	findResult := db.DB.Select("usuario_id").First(&reserva, "id = ?", id)
+	findResult := db.DB.Select("\"usuarioId\"").First(&reserva, "id = ?", id)
 
 	if findResult.Error != nil {
 		if errors.Is(findResult.Error, gorm.ErrRecordNotFound) {

@@ -43,6 +43,9 @@ func main() {
 	// 🔥 RUTA DE LOGIN (SIN PROTECCIÓN) 🔥
 	r.HandleFunc("/login", routes.LoginHandler).Methods("POST")
 
+	// Check email availability (SIN PROTECCIÓN - needed for registration)
+	r.HandleFunc("/users/check-email", routes.CheckEmailAvailabilityHandler).Methods("GET")
+
 	// POST (Registro/Creación: SIN protección)
 	r.HandleFunc("/users", routes.PostUserHandler).Methods("POST")
 

@@ -37,6 +37,17 @@ export class WebsocketService {
   private connected$ = new BehaviorSubject<boolean>(false);
   private connectionId$ = new BehaviorSubject<string | null>(null);
   
+  // Configuración desde environment
+  private defaultConfig: WebSocketConfig = {
+    url: 'http://localhost:8080',
+    options: {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    }
+  };
+  
   // Subjects para eventos específicos
   private dashboardUpdate$ = new Subject<DashboardUpdate>();
   private reservaCreada$ = new Subject<Notification>();
@@ -345,5 +356,49 @@ export class WebsocketService {
 
   onServerStats(): Observable<any> {
     return this.serverStats$.asObservable();
+  }
+
+  // ==================== MÉTODO GENÉRICO EMIT ====================
+
+  /**
+   * Método genérico para emitir cualquier evento al WebSocket
+   * @param event Nombre del evento
+   * @param data Datos a enviar
+   */
+  emit(event: string, data?: any): void {
+    if (!this.socket?.connected) {
+      console.error('❌ No hay conexión WebSocket activa');
+      return;
+    }
+
+    this.socket.emit(event, data);
+    console.log(`📡 Evento emitido: ${event}`, data);
+  }
+
+  /**
+   * Método genérico para escuchar eventos del WebSocket
+   * @param event Nombre del evento a escuchar
+   * @returns Observable que emite cuando se recibe el evento
+   */
+  on<T = any>(event: string): Observable<T> {
+    return new Observable<T>((observer) => {
+      if (!this.socket) {
+        observer.error('No hay conexión WebSocket activa');
+        return;
+      }
+
+      const handler = (data: T) => {
+        observer.next(data);
+      };
+
+      this.socket.on(event, handler);
+
+      // Cleanup cuando se desuscribe
+      return () => {
+        if (this.socket) {
+          this.socket.off(event, handler);
+        }
+      };
+    });
   }
 }

@@ -1,47 +1,37 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { ObjectType, Field, ID, Int, Float } from '@nestjs/graphql';
-import { Reserva } from './reserva.entity';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { ObjectType, Field, ID } from '@nestjs/graphql';
 
 @ObjectType()
-@Entity()
+@Entity('rutina_usuarios') // Mapear a la tabla 'rutina_usuarios' de Golang
 export class Rutina {
   @Field(() => ID)
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'uuid' })
+  id: string;
 
   @Field()
-  @Column()
-  nombre: string;
+  @Column({ name: 'usuarioId', type: 'uuid' })
+  usuarioId: string;
 
   @Field()
-  @Column('text')
-  descripcion: string;
-
-  @Field(() => Int)
-  @Column()
-  cupoMaximo: number;
-
-  @Field(() => Int)
-  @Column({ default: 0 })
-  duracionMinutos: number;
+  @Column({ type: 'varchar', length: 255 })
+  titulo: string;
 
   @Field({ nullable: true })
-  @Column({ nullable: true })
-  instructor?: string;
+  @Column({ type: 'text', nullable: true })
+  descripcion?: string;
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  nivel?: string; // principiante, intermedio, avanzado
+  @Field(() => String, { nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
+  ejercicios?: string; // JSONB almacenado como string
 
-  @Field(() => Float, { nullable: true })
-  @Column('decimal', { precision: 3, scale: 2, nullable: true })
-  calificacionPromedio?: number;
+  @Field(() => Date)
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-  @Field(() => Boolean)
-  @Column({ default: true })
-  activa: boolean;
+  @Field(() => Date)
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 
-  @Field(() => [Reserva], { nullable: 'itemsAndList' })
-  @OneToMany(() => Reserva, (reserva) => reserva.rutina)
-  reservas: Reserva[];
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
 }

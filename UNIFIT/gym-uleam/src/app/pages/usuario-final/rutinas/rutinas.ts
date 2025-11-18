@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
 import { RutinaService } from '../../../services/rutina.service';
 import { AuthService } from '../../../services/auth.service';
 import { Rutina } from '../../../models/rutina.model';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-rutinas',
@@ -14,14 +15,14 @@ import { Rutina } from '../../../models/rutina.model';
 })
 export class RutinasPage implements OnInit {
   rutinas: Rutina[] = [];
-  private svc = new RutinaService();
-  private auth = new AuthService();
+  private svc = inject(RutinaService);
+  private auth = inject(AuthService);
   usuarioId: string = '';
 
   async ngOnInit(): Promise<void> {
     const u = this.auth.getCurrentUser();
     this.usuarioId = (u && ((u as any).id || (u as any).email)) || '';
-    this.rutinas = await this.svc.list() as any;
+    this.rutinas = await firstValueFrom(this.svc.list()) as any;
     // filter user's rutinas
     this.rutinas = this.rutinas.filter(r => r.usuarioId === this.usuarioId);
   }

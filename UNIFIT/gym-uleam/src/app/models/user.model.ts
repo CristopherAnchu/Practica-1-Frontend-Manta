@@ -6,5 +6,7 @@ export interface User {
   tipo?: 'CLIENTE' | 'ADMINISTRADOR' | 'OTRO';
   rol?: 'CLIENTE' | 'ADMINISTRADOR';
   telefono?: string;
+  cedula?: string;
   createdAt?: string;
+  token?: string;
 }

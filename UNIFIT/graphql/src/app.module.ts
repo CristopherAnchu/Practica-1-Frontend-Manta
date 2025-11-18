@@ -31,13 +31,16 @@ import { Reserva } from './entities/reserva.entity';
       },
     }),
 
-    // Configuración de TypeORM
+    // Configuración de TypeORM - PostgreSQL (misma BD que Golang)
     TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'unifit.db',
-      synchronize: true, // En producción usar migraciones
-      logging: ['error', 'warn', 'info'],
+      type: 'postgres',
+      url: process.env.DATABASE_URL || 'postgres://neondb_owner:npg_ePlbRr4NvMh8@ep-blue-lab-adyjs4fj-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require',
+      synchronize: false, // No sincronizar automáticamente, usar esquema de Golang
+      logging: ['error', 'warn'],
       entities: [Usuario, Rol, Rutina, Reserva],
+      ssl: {
+        rejectUnauthorized: false
+      }
     }),
 
     // Módulos de negocio

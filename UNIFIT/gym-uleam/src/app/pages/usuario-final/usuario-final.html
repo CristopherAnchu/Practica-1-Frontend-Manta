@@ -107,8 +107,11 @@
               </div>
 
               <div *ngIf="horarioSeleccionado" class="mt-4 animate-fade-in">
-                <button class="btn btn-success btn-lg w-100 confirm-btn" (click)="confirmarReserva()">
-                  <i class="bi bi-check-circle"></i> Confirmar reserva
+                <button class="btn btn-success btn-lg w-100 confirm-btn" 
+                        (click)="confirmarReserva()" 
+                        [disabled]="creandoReserva">
+                  <i class="bi bi-check-circle"></i> 
+                  {{ creandoReserva ? 'Creando reserva...' : 'Confirmar reserva' }}
                 </button>
               </div>
             </div>
@@ -175,14 +178,14 @@
                 </div>
                 <div *ngIf="fechaSeleccionada && hayReservasEnFecha" class="reservas-list">
                   <div *ngFor="let r of reservasDelDia" class="reserva-item">
-                    <span class="reserva-badge" [class.my-reserva]="r.usuario === usuarioActual">
-                      <i class="bi" [class.bi-person-check]="r.usuario === usuarioActual" [class.bi-person]="r.usuario !== usuarioActual"></i>
-                      {{ r.hora }}
+                    <span class="reserva-badge" [class.my-reserva]="r.usuarioId === usuarioActual">
+                      <i class="bi" [class.bi-person-check]="r.usuarioId === usuarioActual" [class.bi-person]="r.usuarioId !== usuarioActual"></i>
+                      {{ r.hora || '00:00' }}
                     </span>
                     <span class="reserva-info">
-                      {{ r.duracion }}h
-                      <span class="badge bg-warning text-dark ms-2" *ngIf="r.usuario === usuarioActual">Tu reserva</span>
-                      <span class="badge bg-secondary ms-2" *ngIf="r.usuario !== usuarioActual">Ocupado</span>
+                      {{ r.duracion || 1 }}h
+                      <span class="badge bg-warning text-dark ms-2" *ngIf="r.usuarioId === usuarioActual">Tu reserva</span>
+                      <span class="badge bg-secondary ms-2" *ngIf="r.usuarioId !== usuarioActual">Ocupado</span>
                     </span>
                   </div>
                 </div>
@@ -246,7 +249,7 @@
               <i class="bi bi-clock info-icon"></i>
               <div class="info-details">
                 <label>Horario</label>
-                <div class="info-value">{{ r.hora }} - {{ sumarHoras(r.hora, r.duracion) }}</div>
+                <div class="info-value">{{ r.hora || '00:00' }} - {{ sumarHoras(r.hora || '00:00', r.duracion || 1) }}</div>
               </div>
             </div>
 
@@ -254,7 +257,7 @@
               <i class="bi bi-hourglass-split info-icon"></i>
               <div class="info-details">
                 <label>Duración</label>
-                <div class="info-value">{{ r.duracion }} hora{{ r.duracion > 1 ? 's' : '' }}</div>
+                <div class="info-value">{{ r.duracion || 1 }} hora{{ (r.duracion || 1) > 1 ? 's' : '' }}</div>
               </div>
             </div>
 

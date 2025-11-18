@@ -1,13 +1,81 @@
-import { GenericDataService } from './generic-data.service';
-import { LocalStorageAdapter } from './local-storage-adapter.service';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { RestApiService } from './rest-api.service';
+import { GraphqlService } from './graphql.service';
 import { User } from '../models/user.model';
 
+/**
+ * UserService - Servicio híbrido que usa:
+ * - REST API (Golang) para operaciones CRUD
+ * - GraphQL (NestJS) para consultas complejas y reportes
+ */
+@Injectable({
+  providedIn: 'root'
+})
 export class UserService {
-  private svc = new GenericDataService<User>(new LocalStorageAdapter<User>('usuarios'));
 
-  list() { return this.svc.list(); }
-  get(id: string) { return this.svc.get(id); }
-  create(u: User) { return this.svc.create(u); }
-  update(id: string, u: Partial<User>) { return this.svc.update(id, u); }
-  delete(id: string) { return this.svc.delete(id); }
+  constructor(
+    private restApi: RestApiService,
+    private graphql: GraphqlService
+  ) {}
+
+  // ==================== OPERACIONES CRUD (REST) ====================
+
+  /**
+   * Obtiene todos los usuarios usando REST API
+   */
+  list(): Observable<User[]> {
+    return this.restApi.getUsers();
+  }
+
+  /**
+   * Obtiene un usuario por ID usando REST API
+   */
+  get(id: string): Observable<User> {
+    return this.restApi.getUserById(parseInt(id));
+  }
+
+  /**
+   * Crea un nuevo usuario usando REST API
+   */
+  create(user: User): Observable<User> {
+    return this.restApi.createUser(user);
+  }
+
+  /**
+   * Actualiza un usuario usando REST API
+   */
+  update(id: string, user: Partial<User>): Observable<User> {
+    return this.restApi.updateUser(parseInt(id), user);
+  }
+
+  /**
+   * Elimina un usuario usando REST API
+   */
+  delete(id: string): Observable<any> {
+    return this.restApi.deleteUser(parseInt(id));
+  }
+
+  // ==================== CONSULTAS COMPLEJAS (GraphQL) ====================
+
+  /**
+   * Obtiene usuarios activos usando GraphQL
+   */
+  getUsuariosActivos(limite?: number): Observable<any[]> {
+    return this.graphql.getUsuariosActivos(limite);
+  }
+
+  /**
+   * Obtiene resumen de un usuario usando GraphQL
+   */
+  getResumenUsuario(usuarioId: number): Observable<any> {
+    return this.graphql.getResumenUsuario(usuarioId);
+  }
+
+  /**
+   * Obtiene usuarios con filtros usando GraphQL
+   */
+  getUsuariosConFiltros(filter?: any): Observable<any[]> {
+    return this.graphql.getUsuarios(filter);
+  }
 }

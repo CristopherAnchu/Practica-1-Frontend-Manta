@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -14,7 +15,7 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./register.css']
 })
 export class Register {
-  private auth = new AuthService();
+  private auth = inject(AuthService);
   private router = inject(Router);
 
   // Modelo de formulario
@@ -159,10 +160,9 @@ export class Register {
     }
 
     // Verificar si el email ya existe
-    const allUsers = await this.auth.getAllUsers();
-    const emailExists = allUsers.some(u => u.email.toLowerCase() === this.formData.email.toLowerCase());
+    const emailCheck = await firstValueFrom(this.auth.checkEmailAvailability(this.formData.email));
     
-    if (emailExists) {
+    if (!emailCheck.available) {
       Swal.fire({
         icon: 'error',
         title: 'Email ya registrado',

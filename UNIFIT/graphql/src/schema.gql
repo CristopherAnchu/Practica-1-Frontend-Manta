@@ -2,35 +2,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-input CreateReservaInput {
-  fecha: String!
-  observaciones: String
-  rutinaId: Int!
-  usuarioId: Int!
-}
-
 input CreateRolInput {
   descripcion: String
   nombre: String!
   permisos: [String!]
-}
-
-input CreateRutinaInput {
-  cupoMaximo: Int!
-  descripcion: String!
-  duracionMinutos: Int
-  instructor: String
-  nivel: String
-  nombre: String!
-}
-
-input CreateUsuarioInput {
-  cedula: String
-  correo: String!
-  nombre: String!
-  rolId: Int
-  telefono: String
-  tipo: String!
 }
 
 """
@@ -38,73 +13,23 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type EstadisticasReservas {
-  calificacionPromedio: Float!
-  porcentajeAsistencia: Float!
-  reservasActivas: Int!
-  reservasCanceladas: Int!
-  reservasFinalizadas: Int!
-  totalReservas: Int!
-}
-
 type Mutation {
-  """Recalcula la calificación promedio de una rutina"""
-  actualizarCalificacionRutina(id: Int!): Rutina!
-
-  """Actualiza una reserva existente"""
-  actualizarReserva(id: Int!, input: UpdateReservaInput!): Reserva!
-
   """Actualiza un rol existente"""
   actualizarRol(id: Int!, input: UpdateRolInput!): Rol!
-
-  """Actualiza una rutina existente"""
-  actualizarRutina(id: Int!, input: UpdateRutinaInput!): Rutina!
-
-  """Actualiza un usuario existente"""
-  actualizarUsuario(id: Int!, input: UpdateUsuarioInput!): Usuario!
-
-  """Crea una nueva reserva"""
-  crearReserva(input: CreateReservaInput!): Reserva!
 
   """Crea un nuevo rol"""
   crearRol(input: CreateRolInput!): Rol!
 
-  """Crea una nueva rutina"""
-  crearRutina(input: CreateRutinaInput!): Rutina!
-
-  """Crea un nuevo usuario"""
-  crearUsuario(input: CreateUsuarioInput!): Usuario!
-
-  """Elimina una reserva por su ID"""
-  eliminarReserva(id: Int!): Boolean!
-
   """Elimina un rol por su ID"""
   eliminarRol(id: Int!): Boolean!
-
-  """Elimina una rutina por su ID"""
-  eliminarRutina(id: Int!): Boolean!
-
-  """Elimina un usuario por su ID"""
-  eliminarUsuario(id: Int!): Boolean!
 }
 
 type Query {
-  """
-  Obtiene estadísticas generales de reservas con rango de fechas opcional
-  """
-  estadisticasReservas(fechaFin: String, fechaInicio: String): EstadisticasReservas!
-
-  """Obtiene reporte de ocupación de rutinas por fecha"""
-  reporteOcupacion(fecha: String): [ReporteOcupacion!]!
-
   """Obtiene una reserva por su ID"""
-  reserva(id: Int!): Reserva!
+  reserva(id: String!): Reserva!
 
-  """Obtiene todas las reservas con filtros opcionales"""
-  reservas(filter: ReservaFilterInput): [Reserva!]!
-
-  """Obtiene resumen completo de actividad de un usuario"""
-  resumenUsuario(usuarioId: Int!): ResumenUsuario!
+  """Obtiene todas las reservas"""
+  reservas: [Reserva!]!
 
   """Obtiene un rol por su ID"""
   rol(id: Int!): Rol!
@@ -113,67 +38,30 @@ type Query {
   roles: [Rol!]!
 
   """Obtiene una rutina por su ID"""
-  rutina(id: Int!): Rutina!
+  rutina(id: String!): Rutina!
 
-  """Obtiene todas las rutinas con filtros opcionales"""
-  rutinas(filter: RutinaFilterInput): [Rutina!]!
-
-  """Obtiene las rutinas más populares ordenadas por número de reservas"""
-  rutinasPopulares(limite: Int): [RutinaPopular!]!
-
-  """Obtiene tendencias de reservas agrupadas por día"""
-  tendenciasReservas(fechaFin: String!, fechaInicio: String!): [TendenciaReservas!]!
+  """Obtiene todas las rutinas"""
+  rutinas: [Rutina!]!
 
   """Obtiene un usuario por su ID"""
-  usuario(id: Int!): Usuario!
+  usuario(id: String!): Usuario!
 
-  """Obtiene todos los usuarios con filtros opcionales"""
-  usuarios(filter: UsuarioFilterInput): [Usuario!]!
-
-  """Obtiene estadísticas de usuarios más activos"""
-  usuariosActivos(limite: Int): [UsuarioActivo!]!
-}
-
-type ReporteOcupacion {
-  cupoMaximo: Int!
-  cuposDisponibles: Int!
-  fecha: String!
-  nombreRutina: String!
-  porcentajeOcupacion: Float!
-  reservasActivas: Int!
-  rutinaId: Int!
+  """Obtiene todos los usuarios"""
+  usuarios: [Usuario!]!
 }
 
 type Reserva {
-  asistio: Boolean!
-  calificacion: Int
-  estado: String!
-  fecha: DateTime!
-  fechaCreacion: DateTime!
-  id: ID!
-  observaciones: String
-  rutina: Rutina!
-  usuario: Usuario!
-}
-
-input ReservaFilterInput {
-  asistio: Boolean
+  createdAt: DateTime!
+  duracion: Int
+  equipoId: String
   estado: String
-  fechaFin: String
-  fechaInicio: String
-  rutinaId: Int
-  usuarioId: Int
-}
-
-type ResumenUsuario {
-  calificacionPromedio: Float!
-  correo: String!
-  nombre: String!
-  reservasCompletadas: Int!
-  reservasProximas: Int!
-  totalReservas: Int!
-  ultimaReserva: String!
-  usuarioId: Int!
+  fecha: DateTime!
+  hora: String
+  horarioId: String
+  id: ID!
+  updatedAt: DateTime!
+  usuario: Usuario
+  usuarioId: String!
 }
 
 type Rol {
@@ -185,47 +73,13 @@ type Rol {
 }
 
 type Rutina {
-  activa: Boolean!
-  calificacionPromedio: Float
-  cupoMaximo: Int!
-  descripcion: String!
-  duracionMinutos: Int!
+  createdAt: DateTime!
+  descripcion: String
+  ejercicios: String
   id: ID!
-  instructor: String
-  nivel: String
-  nombre: String!
-  reservas: [Reserva]
-}
-
-input RutinaFilterInput {
-  activa: Boolean
-  instructor: String
-  nivel: String
-}
-
-type RutinaPopular {
-  calificacionPromedio: Float
-  cupoMaximo: Int!
-  nombreRutina: String!
-  ocupacionPromedio: Float!
-  rutinaId: Int!
-  totalReservas: Int!
-}
-
-type TendenciaReservas {
-  fecha: String!
-  reservasCanceladas: Int!
-  reservasCompletadas: Int!
-  reservasCreadas: Int!
-  totalReservas: Int!
-}
-
-input UpdateReservaInput {
-  asistio: Boolean
-  calificacion: Int
-  estado: String
-  fecha: String
-  observaciones: String
+  titulo: String!
+  updatedAt: DateTime!
+  usuarioId: String!
 }
 
 input UpdateRolInput {
@@ -234,51 +88,12 @@ input UpdateRolInput {
   permisos: [String!]
 }
 
-input UpdateRutinaInput {
-  activa: Boolean
-  cupoMaximo: Int
-  descripcion: String
-  duracionMinutos: Int
-  instructor: String
-  nivel: String
-  nombre: String
-}
-
-input UpdateUsuarioInput {
-  activo: Boolean
-  cedula: String
-  correo: String
-  nombre: String
-  rolId: Int
-  telefono: String
-  tipo: String
-}
-
 type Usuario {
-  activo: Boolean!
-  cedula: String
-  correo: String!
-  fechaRegistro: DateTime!
+  createdAt: DateTime!
+  email: String!
   id: ID!
   nombre: String!
-  reservas: [Reserva]
-  rol: Rol
-  telefono: String
-  tipo: String!
-}
-
-type UsuarioActivo {
-  correo: String!
-  nombreUsuario: String!
-  porcentajeAsistencia: Float!
-  reservasCompletadas: Int!
-  tipo: String!
-  totalReservas: Int!
-  usuarioId: Int!
-}
-
-input UsuarioFilterInput {
-  activo: Boolean
-  rolId: Int
+  rol: String
   tipo: String
+  updatedAt: DateTime!
 }

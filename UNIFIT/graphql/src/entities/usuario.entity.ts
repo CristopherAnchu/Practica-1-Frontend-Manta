@@ -1,48 +1,47 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
-import { Rol } from './rol.entity';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany } from 'typeorm';
+import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { Reserva } from './reserva.entity';
 
 @ObjectType()
-@Entity()
+@Entity('users') // Mapear a la tabla 'users' de Golang
 export class Usuario {
   @Field(() => ID)
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'uuid' })
+  id: string;
 
   @Field()
-  @Column()
+  @Column({ type: 'varchar', length: 255, nullable: true })
   nombre: string;
 
   @Field()
-  @Column({ unique: true })
-  correo: string;
+  @Column({ type: 'varchar', length: 255, unique: true })
+  email: string;
 
-  @Field()
-  @Column()
-  tipo: string; // estudiante, docente, administrativo
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  telefono?: string;
+  // No exponemos password en GraphQL
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  password: string;
 
   @Field({ nullable: true })
-  @Column({ nullable: true })
-  cedula?: string;
+  @Column({ type: 'varchar', nullable: true })
+  tipo?: string; // ADMINISTRADOR, USUARIO_FINAL
+
+  @Field({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
+  rol?: string; // ADMINISTRADOR, USUARIO
 
   @Field(() => Date)
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  fechaRegistro: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-  @Field(() => Boolean)
-  @Column({ default: true })
-  activo: boolean;
+  @Field(() => Date)
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 
-  @Field(() => Rol, { nullable: true })
-  @ManyToOne(() => Rol, (rol) => rol.usuarios, { eager: true })
-  rol: Rol;
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
 
-  @Field(() => [Reserva], { nullable: 'itemsAndList' })
-  @OneToMany(() => Reserva, (reserva) => reserva.usuario)
-  reservas: Reserva[];
+  // Relaciones - comentadas por ahora ya que las tablas de Golang pueden tener estructura diferente
+  // @Field(() => [Reserva], { nullable: 'itemsAndList' })
+  // @OneToMany(() => Reserva, (reserva) => reserva.usuario)
+  // reservas: Reserva[];
 }

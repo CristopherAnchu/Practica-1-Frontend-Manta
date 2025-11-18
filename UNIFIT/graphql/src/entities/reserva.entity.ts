@@ -1,49 +1,56 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
 import { Usuario } from './usuario.entity';
-import { Rutina } from './rutina.entity';
 
 @ObjectType()
-@Entity()
+@Entity('reservas') // Mapear a la tabla 'reservas' de Golang
 export class Reserva {
   @Field(() => ID)
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Field(() => Date)
-  @Column({ type: 'datetime' })
-  fecha: Date;
-
-  @Field(() => Date)
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  fechaCreacion: Date;
+  @PrimaryColumn({ type: 'uuid' })
+  id: string;
 
   @Field()
-  @Column()
-  estado: string; // activa, cancelada, finalizada, confirmada
+  @Column({ name: 'usuarioId', type: 'uuid' })
+  usuarioId: string;
 
   @Field({ nullable: true })
-  @Column('text', { nullable: true })
-  observaciones?: string;
+  @Column({ name: 'equipoId', type: 'uuid', nullable: true })
+  equipoId?: string;
+
+  @Field({ nullable: true })
+  @Column({ name: 'horarioId', type: 'uuid', nullable: true })
+  horarioId?: string;
+
+  @Field()
+  @Column({ type: 'date' })
+  fecha: Date;
+
+  @Field({ nullable: true })
+  @Column({ type: 'varchar', length: 5, nullable: true })
+  hora?: string;
 
   @Field(() => Int, { nullable: true })
-  @Column({ nullable: true })
-  calificacion?: number; // 1-5
+  @Column({ type: 'integer', nullable: true })
+  duracion?: number;
 
-  @Field(() => Boolean)
-  @Column({ default: false })
-  asistio: boolean;
+  @Field({ nullable: true })
+  @Column({ type: 'varchar', length: 20, default: 'PENDIENTE', nullable: true })
+  estado?: string;
 
-  @Field(() => Usuario)
-  @ManyToOne(() => Usuario, (usuario) => usuario.reservas, { 
-    onDelete: 'CASCADE',
-    eager: true 
-  })
-  usuario: Usuario;
+  @Field(() => Date)
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-  @Field(() => Rutina)
-  @ManyToOne(() => Rutina, (rutina) => rutina.reservas, { 
-    eager: true 
-  })
-  rutina: Rutina;
+  @Field(() => Date)
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
+
+  // Relación con Usuario
+  @Field(() => Usuario, { nullable: true })
+  @ManyToOne(() => Usuario, { eager: false })
+  @JoinColumn({ name: 'usuarioId' })
+  usuario?: Usuario;
 }

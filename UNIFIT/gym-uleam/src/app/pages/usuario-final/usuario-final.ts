@@ -6,19 +6,12 @@ import flatpickr from 'flatpickr';
 import Swal from 'sweetalert2';
 import { ReservaService } from '../../services/reserva.service';
 import { AuthService } from '../../services/auth.service';
+import { Reserva } from '../../models/reserva.model';
+import { firstValueFrom } from 'rxjs';
 
 // Tipado simple para evitar problemas con exportaciones de tipos de flatpickr
 type FlatpickrInstance = any;
 type FlatpickrOptions = any;
-
-interface Reserva {
-  id: string;
-  usuario: string; // email o id usuario
-  fecha: string;   // formato YYYY-MM-DD
-  hora: string;    // formato HH:00
-  duracion: number; // horas (1 o 2)
-  estado?: 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA';
-}
 
 interface RutinaPredefinida {
   nombre: string;
@@ -50,6 +43,7 @@ export class UsuarioFinal implements OnInit, AfterViewInit, OnDestroy {
   fechaSeleccionada: string | null = null;
   horarioSeleccionado: string | null = null;
   duracion: number | null = null;
+  creandoReserva: boolean = false; // Prevenir doble click
 
   horariosDisponibles: { hora: string, reservado: boolean }[] = [];
 
@@ -124,8 +118,8 @@ export class UsuarioFinal implements OnInit, AfterViewInit, OnDestroy {
     }
   ];
 
-  private reservaSvc = new ReservaService();
-  private auth = new AuthService();
+  private reservaSvc = inject(ReservaService);
+  private auth = inject(AuthService);
   private router = inject(Router);
 
   constructor() {
@@ -135,7 +129,13 @@ export class UsuarioFinal implements OnInit, AfterViewInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     const usuario = this.auth.getCurrentUser();
     this.usuarioActual = (usuario && ((usuario as any).id || (usuario as any).email)) || 'usuario@demo.com';
-    this.reservas = await this.reservaSvc.list() as any;
+    try {
+      const reservasData = await firstValueFrom(this.reservaSvc.list());
+      this.reservas = Array.isArray(reservasData) ? reservasData : [];
+    } catch (error) {
+      console.error('Error cargando reservas:', error);
+      this.reservas = [];
+    }
     this.cargarReservasUsuario();
   }
 
@@ -312,8 +312,8 @@ export class UsuarioFinal implements OnInit, AfterViewInit, OnDestroy {
 
       const ocupado = this.reservas.some(r => {
         if (r.fecha !== this.fechaSeleccionada) return false;
-        const reservaInicio = parseInt(r.hora.split(':')[0], 10);
-        const reservaFin = reservaInicio + r.duracion;
+        const reservaInicio = parseInt((r.hora || '00:00').split(':')[0], 10);
+        const reservaFin = reservaInicio + (r.duracion || 1);
         const slotInicio = horaNum;
         const slotFin = slotInicio + duracionSeleccion;
         return (slotInicio < reservaFin) && (slotFin > reservaInicio);
@@ -328,6 +328,11 @@ export class UsuarioFinal implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async confirmarReserva() {
+    // Prevenir doble click
+    if (this.creandoReserva) {
+      return;
+    }
+    
     if (!this.fechaSeleccionada || !this.horarioSeleccionado || !this.duracion) {
       await Swal.fire({
         icon: 'warning',
@@ -337,53 +342,80 @@ export class UsuarioFinal implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const horaNum = parseInt(this.horarioSeleccionado.split(':')[0], 10);
-    const duracion = this.duracion ?? 1;
+    this.creandoReserva = true;
 
-    const all = await this.reservaSvc.list();
-    const solapado = all.some((r: any) => {
-      if (r.fecha !== this.fechaSeleccionada) return false;
-      const reservaInicio = parseInt(((r as any).hora || '00:00').split(':')[0], 10);
-      const reservaFin = reservaInicio + ((r as any).duracion || 1);
-      const slotInicio = horaNum;
-      const slotFin = slotInicio + duracion;
-      return (slotInicio < reservaFin) && (slotFin > reservaInicio);
-    });
+    try {
+      const horaNum = parseInt(this.horarioSeleccionado.split(':')[0], 10);
+      const duracion = this.duracion ?? 1;
 
-    if (solapado) {
+      // Recargar reservas antes de validar para tener datos frescos
+      const reservasActuales = await firstValueFrom(this.reservaSvc.list());
+      this.reservas = Array.isArray(reservasActuales) ? reservasActuales : [];
+      
+      const solapado = this.reservas.some((r: Reserva) => {
+        if (r.fecha !== this.fechaSeleccionada) return false;
+        const reservaInicio = parseInt((r.hora || '00:00').split(':')[0], 10);
+        const reservaFin = reservaInicio + (r.duracion || 1);
+        const slotInicio = horaNum;
+        const slotFin = slotInicio + duracion;
+        return (slotInicio < reservaFin) && (slotFin > reservaInicio);
+      });
+
+      if (solapado) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Horario no disponible',
+          text: 'El horario seleccionado se cruza con otra reserva.'
+        });
+        return;
+      }
+
+      const nuevaReserva: any = {
+        fecha: this.fechaSeleccionada,
+        hora: this.horarioSeleccionado,
+        duracion: duracion,
+        estado: 'PENDIENTE'
+      };
+
+      await this.reservaSvc.create(nuevaReserva);
+      
+      // Recargar reservas después de crear exitosamente
+      const reservasActualizadas = await firstValueFrom(this.reservaSvc.list());
+      this.reservas = Array.isArray(reservasActualizadas) ? reservasActualizadas : [];
+      this.cargarReservasUsuario();
+      
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Reserva confirmada!',
+        text: `Tu reserva para el ${this.fechaSeleccionada} a las ${this.horarioSeleccionado} ha sido creada exitosamente.`,
+        confirmButtonText: 'Entendido'
+      });
+      
+      this.resetSeleccion();
+      this.generarHorariosDisponibles();
+      
+    } catch (error: any) {
+      // Recargar reservas incluso si hay error
+      try {
+        const reservasActualizadas = await firstValueFrom(this.reservaSvc.list());
+        this.reservas = Array.isArray(reservasActualizadas) ? reservasActualizadas : [];
+        this.cargarReservasUsuario();
+        this.generarHorariosDisponibles();
+      } catch (e) {
+        console.error('Error recargando reservas:', e);
+      }
+      
       await Swal.fire({
         icon: 'error',
-        title: 'Horario no disponible',
-        text: 'El horario seleccionado se cruza con otra reserva.'
+        title: 'Error al crear reserva',
+        text: error?.message || 'No se pudo crear la reserva. Por favor intenta nuevamente.',
+        confirmButtonText: 'Entendido'
       });
-      return;
+    } finally {
+      this.creandoReserva = false;
     }
-
-    const nuevaReserva: any = {
-      id: Date.now().toString(),
-      usuarioId: this.usuarioActual,
-      fecha: this.fechaSeleccionada,
-      hora: this.horarioSeleccionado,
-      duracion: duracion,
-      estado: 'PENDIENTE',
-      createdAt: new Date().toISOString()
-    };
-
-    await this.reservaSvc.create(nuevaReserva as any);
-    this.reservas = await this.reservaSvc.list() as any;
-    this.cargarReservasUsuario();
-    
-    await Swal.fire({
-      icon: 'success',
-      title: '¡Reserva confirmada!',
-      text: `Tu reserva para el ${this.fechaSeleccionada} a las ${this.horarioSeleccionado} ha sido creada exitosamente.`,
-      confirmButtonText: 'Entendido'
-    });
-    
-    this.resetSeleccion();
-    if (this.fechaSeleccionada) this.generarHorariosDisponibles();
   }  cargarReservasUsuario() {
-    this.reservasUsuario = (this.reservas as any[]).filter(r => (r.usuarioId || (r as any).usuario) === this.usuarioActual);
+    this.reservasUsuario = this.reservas.filter(r => r.usuarioId === this.usuarioActual);
   }
 
   async cancelarReserva(reserva: Reserva) {
@@ -399,19 +431,43 @@ export class UsuarioFinal implements OnInit, AfterViewInit, OnDestroy {
 
     if (!result.isConfirmed) return;
 
-    await this.reservaSvc.delete(reserva.id);
-    this.reservas = await this.reservaSvc.list() as any;
-    this.cargarReservasUsuario();
-    
-    await Swal.fire({
-      icon: 'success',
-      title: 'Reserva cancelada',
-      text: 'La reserva ha sido cancelada exitosamente.',
-      timer: 2000,
-      showConfirmButton: false
-    });
+    try {
+      await this.reservaSvc.delete(reserva.id);
+      
+      // Recargar reservas con validación
+      const reservasActualizadas = await firstValueFrom(this.reservaSvc.list());
+      this.reservas = Array.isArray(reservasActualizadas) ? reservasActualizadas : [];
+      this.cargarReservasUsuario();
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Reserva cancelada',
+        text: 'La reserva ha sido cancelada exitosamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
 
-    if (this.fechaSeleccionada === reserva.fecha) this.generarHorariosDisponibles();
+      if (this.fechaSeleccionada === reserva.fecha) this.generarHorariosDisponibles();
+      
+    } catch (error: any) {
+      console.error('Error cancelando reserva:', error);
+      
+      // Recargar reservas incluso si hay error
+      try {
+        const reservasActualizadas = await firstValueFrom(this.reservaSvc.list());
+        this.reservas = Array.isArray(reservasActualizadas) ? reservasActualizadas : [];
+        this.cargarReservasUsuario();
+      } catch (e) {
+        console.error('Error recargando reservas:', e);
+      }
+      
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al cancelar',
+        text: error?.message || 'No se pudo cancelar la reserva. Por favor intenta nuevamente.',
+        confirmButtonText: 'Entendido'
+      });
+    }
   }
 
   sumarHoras(hora: string, duracion: number): string {
@@ -454,11 +510,13 @@ export class UsuarioFinal implements OnInit, AfterViewInit, OnDestroy {
 
   async verDetalleReserva(reserva: Reserva) {
     const diasRestantes = this.getDaysUntil(reserva.fecha);
+    const horaInicio = reserva.hora || '00:00';
+    const duracionHoras = reserva.duracion || 1;
     let mensaje = `
       <div style="text-align: left;">
         <p><strong>📅 Fecha:</strong> ${reserva.fecha}</p>
-        <p><strong>🕐 Horario:</strong> ${reserva.hora} - ${this.sumarHoras(reserva.hora, reserva.duracion)}</p>
-        <p><strong>⏱️ Duración:</strong> ${reserva.duracion} hora(s)</p>
+        <p><strong>🕐 Horario:</strong> ${horaInicio} - ${this.sumarHoras(horaInicio, duracionHoras)}</p>
+        <p><strong>⏱️ Duración:</strong> ${duracionHoras} hora(s)</p>
         <p><strong>📍 Estado:</strong> ${reserva.estado || 'PENDIENTE'}</p>
     `;
     

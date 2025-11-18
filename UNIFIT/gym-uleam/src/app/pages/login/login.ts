@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./login.css']
 })
 export class Login {
-  private auth = new AuthService();
+  private auth = inject(AuthService);
   private router = inject(Router);
 
   async onSubmit(event: Event): Promise<void> {

@@ -179,6 +179,20 @@ export class GraphqlService {
     );
   }
 
+  getReservasPorRango(fechaInicio: string, fechaFin: string): Observable<TYPES.Reserva[]> {
+    return this.apollo.query<{ reservas: TYPES.Reserva[] }>({
+      query: QUERIES.GET_RESERVAS,
+      variables: {
+        filter: {
+          fechaInicio,
+          fechaFin
+        }
+      }
+    }).pipe(
+      map(result => result.data!.reservas)
+    );
+  }
+
   // ==================== REPORTES ====================
 
   getEstadisticasReservas(fechaInicio?: string, fechaFin?: string): Observable<TYPES.EstadisticasReservas> {

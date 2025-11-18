@@ -5,8 +5,12 @@ import { Router } from '@angular/router';
 import { GenericDataService } from '../../services/generic-data.service';
 import { LocalStorageAdapter } from '../../services/local-storage-adapter.service';
 import { AuthService } from '../../services/auth.service';
+import { ReservaService } from '../../services/reserva.service';
+import { RutinaService } from '../../services/rutina.service';
+import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
 import { Reserva } from '../../models/reserva.model';
+import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 interface Equipo {
@@ -59,10 +63,11 @@ export class Administrador implements OnInit {
   view: 'dashboard' | 'reservas' | 'usuarios' | 'asistencias' | 'equipos' | 'rutinas' | 'incidencias' = 'dashboard';
 
   // Services
-  private usersService = new GenericDataService<User>(new LocalStorageAdapter<User>('usuarios'));
-  private reservasService = new GenericDataService<Reserva>(new LocalStorageAdapter<Reserva>('reservas'));
+  private userService = inject(UserService);
+  private reservaService = inject(ReservaService);
+  private rutinaService = inject(RutinaService); // Para rutinas de usuarios (HTTP)
+  private rutinasAdminService = new GenericDataService<Rutina>(new LocalStorageAdapter<Rutina>('rutinasAdmin')); // Plantillas de administrador
   private equiposService = new GenericDataService<Equipo>(new LocalStorageAdapter<Equipo>('equipos'));
-  private rutinasService = new GenericDataService<Rutina>(new LocalStorageAdapter<Rutina>('rutinas'));
   private asistenciasService = new GenericDataService<Asistencia>(new LocalStorageAdapter<Asistencia>('asistencias'));
   private incidenciasService = new GenericDataService<Incidencia>(new LocalStorageAdapter<Incidencia>('incidencias'));
 
@@ -84,24 +89,36 @@ export class Administrador implements OnInit {
   usuarioEditando: User | null = null;
 
   private router = inject(Router);
-  private authService = new AuthService();
+  private authService = inject(AuthService);
 
   async ngOnInit(): Promise<void> {
     await this.cargarDatos();
   }
 
   async cargarDatos() {
-    this.usuarios = await this.usersService.list() as any;
-    this.reservas = await this.reservasService.list() as any;
-    this.equipos = await this.equiposService.list() as any;
-    this.rutinas = await this.rutinasService.list() as any;
-    this.asistencias = await this.asistenciasService.list() as any;
-    this.incidencias = await this.incidenciasService.list() as any;
+    try {
+      // Usar servicios HTTP para obtener datos del backend
+      this.usuarios = await firstValueFrom(this.userService.list());
+      this.reservas = await firstValueFrom(this.reservaService.list());
+      
+      // Rutinas de administrador (plantillas) se mantienen en LocalStorage
+      this.rutinas = await this.rutinasAdminService.list() as any;
+      
+      // Mantener LocalStorage para equipos, asistencias e incidencias por ahora
+      this.equipos = await this.equiposService.list() as any;
+      this.asistencias = await this.asistenciasService.list() as any;
+      this.incidencias = await this.incidenciasService.list() as any;
 
-    this.usersCount = this.usuarios.length;
-    this.reservasCount = this.reservas.length;
-    this.equiposCount = this.equipos.length;
-    this.asistenciasCount = this.asistencias.filter(a => a.asistio).length;
+      this.usersCount = this.usuarios.length;
+      this.reservasCount = this.reservas.length;
+      this.equiposCount = this.equipos.length;
+      this.asistenciasCount = this.asistencias.filter(a => a.asistio).length;
+      
+      console.log('📊 Dashboard cargado - Reservas:', this.reservasCount, this.reservas);
+    } catch (error) {
+      console.error('❌ Error cargando datos del dashboard:', error);
+      Swal.fire('Error', 'No se pudieron cargar los datos del dashboard', 'error');
+    }
 
     // Inicializar equipos si no hay
     if (this.equipos.length === 0) {
@@ -217,9 +234,9 @@ export class Administrador implements OnInit {
     ];
 
     for (const rutina of rutinasIniciales) {
-      await this.rutinasService.create(rutina);
+      await this.rutinasAdminService.create(rutina);
     }
-    this.rutinas = await this.rutinasService.list() as any;
+    this.rutinas = await this.rutinasAdminService.list() as any;
   }
 
   // Navigation
@@ -249,17 +266,22 @@ export class Administrador implements OnInit {
     });
 
     if (result.isConfirmed) {
-      reserva.estado = 'CONFIRMADA';
-      await this.reservasService.update(reserva.id, reserva);
-      await this.cargarDatos();
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Reserva confirmada',
-        text: 'La reserva ha sido confirmada exitosamente',
-        confirmButtonColor: '#667eea',
-        timer: 2000
-      });
+      try {
+        reserva.estado = 'CONFIRMADA';
+        await this.reservaService.update(reserva.id, reserva);
+        await this.cargarDatos();
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Reserva confirmada',
+          text: 'La reserva ha sido confirmada exitosamente',
+          confirmButtonColor: '#667eea',
+          timer: 2000
+        });
+      } catch (error) {
+        console.error('❌ Error confirmando reserva:', error);
+        Swal.fire('Error', 'No se pudo confirmar la reserva', 'error');
+      }
     }
   }
 
@@ -275,15 +297,20 @@ export class Administrador implements OnInit {
     });
 
     if (result.isConfirmed) {
-      await this.reservasService.delete(reserva.id);
-      await this.cargarDatos();
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Reserva cancelada',
-        timer: 2000,
-        showConfirmButton: false
-      });
+      try {
+        await this.reservaService.delete(reserva.id);
+        await this.cargarDatos();
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Reserva cancelada',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error('❌ Error cancelando reserva:', error);
+        Swal.fire('Error', 'No se pudo cancelar la reserva', 'error');
+      }
     }
   }
 
@@ -305,16 +332,21 @@ export class Administrador implements OnInit {
       return;
     }
 
-    await this.usersService.update(this.usuarioEditando.id, this.usuarioEditando);
-    await this.cargarDatos();
-    this.usuarioEditando = null;
+    try {
+      await this.userService.update(this.usuarioEditando.id, this.usuarioEditando);
+      await this.cargarDatos();
+      this.usuarioEditando = null;
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Usuario actualizado',
-      timer: 2000,
-      showConfirmButton: false
-    });
+      Swal.fire({
+        icon: 'success',
+        title: 'Usuario actualizado',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('❌ Error actualizando usuario:', error);
+      Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
+    }
   }
 
   cancelarEdicion() {

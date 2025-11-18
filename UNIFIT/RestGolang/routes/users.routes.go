@@ -238,3 +238,50 @@ func UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&existingUser)
 }
+
+// =============================
+//
+//	CHECK EMAIL AVAILABILITY (NO AUTH REQUIRED)
+//
+// =============================
+func CheckEmailAvailabilityHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Get email from query parameter
+	email := r.URL.Query().Get("email")
+	if email == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"available": false,
+			"error":     "Email parameter is required",
+		})
+		return
+	}
+
+	// Check if email exists in database
+	var user models.User
+	result := db.DB.Where("LOWER(email) = LOWER(?)", email).First(&user)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// Email is available
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"available": true,
+			})
+			return
+		}
+		// Database error
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"available": false,
+			"error":     "Database error",
+		})
+		return
+	}
+
+	// Email already exists
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"available": false,
+		"message":   "Email is already registered",
+	})
+}

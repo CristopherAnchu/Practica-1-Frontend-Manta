@@ -34,7 +34,7 @@ func GetAsistenciasHandler(w http.ResponseWriter, r *http.Request) {
 	// 2. LÓGICA DE AUTORIZACIÓN: Filtrar por Rol
 	if authUser.Rol == "CLIENTE" {
 		// Un cliente solo puede ver sus propias asistencias
-		query = query.Where("usuario_id = ?", authUser.ID)
+		query = query.Where("\"usuarioId\" = ?", authUser.ID)
 	}
 	// Los Administradores (o cualquier otro rol) ven todas las asistencias.
 
