@@ -1,0 +1,71 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { Cart } from './cart.entity';
+import { Product } from './product.entity';
+import { Variation } from './variation.entity';
+
+/**
+ * Entidad CartItem
+ * Representa un producto específico dentro del carrito con sus personalizaciones
+ */
+@Entity('cart_items')
+export class CartItem {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'uuid' })
+  cartId: string;
+
+  @ManyToOne(() => Cart, (cart) => cart.items, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'cartId' })
+  cart: Cart;
+
+  @Column({ type: 'uuid' })
+  productId: string;
+
+  @ManyToOne(() => Product, { eager: true })
+  @JoinColumn({ name: 'productId' })
+  product: Product;
+
+  @Column({ type: 'uuid', nullable: true })
+  variationId: string;
+
+  @ManyToOne(() => Variation, { eager: true, nullable: true })
+  @JoinColumn({ name: 'variationId' })
+  variation: Variation;
+
+  @Column({ type: 'int', default: 1 })
+  quantity: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  unitPrice: number; // Precio base + modificadores de variación
+
+  @Column({ type: 'json', nullable: true })
+  customizationData: {
+    customizationId: string;
+    type: string;
+    value: string;
+    additionalPrice: number;
+  }[]; // Datos de personalización aplicada
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  customizationTotal: number; // Total de personalizaciones
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  itemTotal: number; // (unitPrice + customizationTotal) * quantity
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}

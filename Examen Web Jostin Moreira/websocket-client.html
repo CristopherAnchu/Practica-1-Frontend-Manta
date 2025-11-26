@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client - E-commerce</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status.connected {
+            background: #10b981;
+        }
+        .status.disconnected {
+            background: #ef4444;
+        }
+        .content {
+            padding: 30px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .stat-card .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .notifications {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .notifications h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        .notification {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .notification.create {
+            border-left-color: #10b981;
+        }
+        .notification.update {
+            border-left-color: #f59e0b;
+        }
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .notification-title {
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .notification-time {
+            color: #6b7280;
+            font-size: 0.85em;
+        }
+        .notification-entity {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin-right: 8px;
+        }
+        .notification-operation {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .notification-operation.create {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .notification-operation.update {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .notification-data {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #374151;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-reconnect {
+            background: #10b981;
+            color: white;
+        }
+        .btn-disconnect {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-clear {
+            background: #6b7280;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔔 WebSocket Notifications</h1>
+            <p>Monitoreo en tiempo real de operaciones REST</p>
+            <div class="status disconnected" id="status">● DESCONECTADO</div>
+        </div>
+
+        <div class="content">
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Total Notificaciones</h3>
+                    <div class="number" id="totalNotifications">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Creaciones</h3>
+                    <div class="number" id="totalCreates">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Actualizaciones</h3>
+                    <div class="number" id="totalUpdates">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Tiempo Conectado</h3>
+                    <div class="number" id="uptime">0s</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn-reconnect" onclick="reconnect()">🔌 Reconectar</button>
+                <button class="btn-disconnect" onclick="disconnect()">🔌 Desconectar</button>
+                <button class="btn-clear" onclick="clearNotifications()">🗑️ Limpiar</button>
+            </div>
+
+            <div class="notifications">
+                <h2>📨 Notificaciones Recibidas</h2>
+                <div id="notificationsList">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        <p>Esperando notificaciones...</p>
+                        <p style="font-size: 0.9em; margin-top: 10px;">
+                            Realiza operaciones REST (POST, PATCH) para ver notificaciones en tiempo real
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let stats = {
+            total: 0,
+            creates: 0,
+            updates: 0,
+            startTime: null
+        };
+
+        function connect() {
+            socket = io('http://localhost:3000', {
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionAttempts: 5
+            });
+
+            socket.on('connect', () => {
+                console.log('✅ Conectado al WebSocket');
+                updateStatus(true);
+                stats.startTime = Date.now();
+                startUptime();
+            });
+
+            socket.on('disconnect', () => {
+                console.log('❌ Desconectado del WebSocket');
+                updateStatus(false);
+            });
+
+            socket.on('notification', (notification) => {
+                console.log('📨 Notificación recibida:', notification);
+                addNotification(notification);
+                updateStats(notification);
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('❌ Error de conexión:', error);
+                updateStatus(false);
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+        }
+
+        function reconnect() {
+            disconnect();
+            setTimeout(connect, 500);
+        }
+
+        function updateStatus(connected) {
+            const statusEl = document.getElementById('status');
+            if (connected) {
+                statusEl.textContent = '● CONECTADO';
+                statusEl.className = 'status connected';
+            } else {
+                statusEl.textContent = '● DESCONECTADO';
+                statusEl.className = 'status disconnected';
+            }
+        }
+
+        function addNotification(notification) {
+            const listEl = document.getElementById('notificationsList');
+            
+            // Remover empty state si existe
+            const emptyState = listEl.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            const notifEl = document.createElement('div');
+            notifEl.className = `notification ${notification.operation}`;
+            
+            const time = new Date(notification.timestamp).toLocaleTimeString('es-ES');
+            
+            notifEl.innerHTML = `
+                <div class="notification-header">
+                    <div class="notification-title">
+                        <span class="notification-entity">${notification.entity}</span>
+                        <span class="notification-operation ${notification.operation}">
+                            ${notification.operation === 'create' ? '✨ CREADO' : '✏️ ACTUALIZADO'}
+                        </span>
+                    </div>
+                    <div class="notification-time">${time}</div>
+                </div>
+                <div><strong>ID:</strong> ${notification.id}</div>
+                <div class="notification-data">${JSON.stringify(notification.data, null, 2)}</div>
+            `;
+            
+            listEl.insertBefore(notifEl, listEl.firstChild);
+        }
+
+        function updateStats(notification) {
+            stats.total++;
+            if (notification.operation === 'create') {
+                stats.creates++;
+            } else if (notification.operation === 'update') {
+                stats.updates++;
+            }
+            
+            document.getElementById('totalNotifications').textContent = stats.total;
+            document.getElementById('totalCreates').textContent = stats.creates;
+            document.getElementById('totalUpdates').textContent = stats.updates;
+        }
+
+        function startUptime() {
+            setInterval(() => {
+                if (stats.startTime && socket && socket.connected) {
+                    const seconds = Math.floor((Date.now() - stats.startTime) / 1000);
+                    const minutes = Math.floor(seconds / 60);
+                    const hours = Math.floor(minutes / 60);
+                    
+                    let uptime = '';
+                    if (hours > 0) {
+                        uptime = `${hours}h ${minutes % 60}m`;
+                    } else if (minutes > 0) {
+                        uptime = `${minutes}m ${seconds % 60}s`;
+                    } else {
+                        uptime = `${seconds}s`;
+                    }
+                    
+                    document.getElementById('uptime').textContent = uptime;
+                }
+            }, 1000);
+        }
+
+        function clearNotifications() {
+            const listEl = document.getElementById('notificationsList');
+            listEl.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <p>Esperando notificaciones...</p>
+                </div>
+            `;
+            
+            stats = { total: 0, creates: 0, updates: 0, startTime: stats.startTime };
+            document.getElementById('totalNotifications').textContent = '0';
+            document.getElementById('totalCreates').textContent = '0';
+            document.getElementById('totalUpdates').textContent = '0';
+        }
+
+        // Conectar automáticamente al cargar la página
+        connect();
+    </script>
+</body>
+</html>

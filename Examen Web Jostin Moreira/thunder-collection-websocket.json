@@ -1,0 +1,228 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "E-commerce WebSocket Demo",
+  "collectionId": "websocket-demo",
+  "dateExported": "2025-11-25",
+  "version": "1.2",
+  "folders": [
+    {
+      "id": "folder-products",
+      "name": "1️⃣ Products",
+      "containerId": "",
+      "created": "2025-11-25T00:00:00.000Z",
+      "sortNum": 10000
+    },
+    {
+      "id": "folder-variations",
+      "name": "2️⃣ Variations",
+      "containerId": "",
+      "created": "2025-11-25T00:00:00.000Z",
+      "sortNum": 20000
+    },
+    {
+      "id": "folder-orders",
+      "name": "3️⃣ Orders",
+      "containerId": "",
+      "created": "2025-11-25T00:00:00.000Z",
+      "sortNum": 30000
+    },
+    {
+      "id": "folder-webhook",
+      "name": "4️⃣ Webhook Direct",
+      "containerId": "",
+      "created": "2025-11-25T00:00:00.000Z",
+      "sortNum": 40000
+    }
+  ],
+  "requests": [
+    {
+      "id": "req-create-product",
+      "colId": "websocket-demo",
+      "containerId": "folder-products",
+      "name": "✨ Crear Producto (→ Webhook → WebSocket)",
+      "url": "http://localhost:3000/api/products",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2025-11-25T00:00:00.000Z",
+      "modified": "2025-11-25T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Camiseta Personalizada\",\n  \"description\": \"Camiseta 100% algodón con diseño personalizable\",\n  \"category\": \"ropa\",\n  \"basePrice\": 25.99,\n  \"imageUrl\": \"https://example.com/shirt.jpg\",\n  \"isActive\": true\n}",
+        "form": []
+      },
+      "tests": [
+        {
+          "type": "set-env-var",
+          "custom": "json.id",
+          "action": "setto",
+          "value": "{{productId}}"
+        }
+      ]
+    },
+    {
+      "id": "req-update-product",
+      "colId": "websocket-demo",
+      "containerId": "folder-products",
+      "name": "✏️ Actualizar Producto (→ Webhook → WebSocket)",
+      "url": "http://localhost:3000/api/products/{{productId}}",
+      "method": "PATCH",
+      "sortNum": 20000,
+      "created": "2025-11-25T00:00:00.000Z",
+      "modified": "2025-11-25T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"basePrice\": 29.99,\n  \"description\": \"Camiseta premium con diseño personalizable - ACTUALIZADA\"\n}",
+        "form": []
+      }
+    },
+    {
+      "id": "req-get-products",
+      "colId": "websocket-demo",
+      "containerId": "folder-products",
+      "name": "📋 Listar Productos (sin notificación)",
+      "url": "http://localhost:3000/api/products",
+      "method": "GET",
+      "sortNum": 30000,
+      "created": "2025-11-25T00:00:00.000Z",
+      "modified": "2025-11-25T00:00:00.000Z"
+    },
+    {
+      "id": "req-create-variation",
+      "colId": "websocket-demo",
+      "containerId": "folder-variations",
+      "name": "✨ Crear Variación (→ Webhook → WebSocket)",
+      "url": "http://localhost:3000/api/variations",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2025-11-25T00:00:00.000Z",
+      "modified": "2025-11-25T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"type\": \"size\",\n  \"name\": \"Talla M\",\n  \"priceModifier\": 0,\n  \"stock\": 100,\n  \"isAvailable\": true\n}",
+        "form": []
+      },
+      "tests": [
+        {
+          "type": "set-env-var",
+          "custom": "json.id",
+          "action": "setto",
+          "value": "{{variationId}}"
+        }
+      ]
+    },
+    {
+      "id": "req-update-variation",
+      "colId": "websocket-demo",
+      "containerId": "folder-variations",
+      "name": "✏️ Actualizar Variación (→ Webhook → WebSocket)",
+      "url": "http://localhost:3000/api/variations/{{variationId}}",
+      "method": "PATCH",
+      "sortNum": 20000,
+      "created": "2025-11-25T00:00:00.000Z",
+      "modified": "2025-11-25T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"stock\": 85,\n  \"priceModifier\": 2.00\n}",
+        "form": []
+      }
+    },
+    {
+      "id": "req-create-order",
+      "colId": "websocket-demo",
+      "containerId": "folder-orders",
+      "name": "✨ Crear Orden (→ Webhook → WebSocket)",
+      "url": "http://localhost:3000/api/orders",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2025-11-25T00:00:00.000Z",
+      "modified": "2025-11-25T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"userId\": \"user-123\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"variationId\": \"{{variationId}}\",\n      \"quantity\": 2,\n      \"unitPrice\": 29.99,\n      \"customizationData\": { \"text\": \"Mi nombre\" },\n      \"customizationTotal\": 5.00,\n      \"itemTotal\": 64.98\n    }\n  ],\n  \"subtotal\": 64.98,\n  \"tax\": 9.75,\n  \"shippingCost\": 5.00,\n  \"discount\": 0,\n  \"total\": 79.73,\n  \"status\": \"pending\",\n  \"shippingAddress\": {\n    \"street\": \"Calle Principal 123\",\n    \"city\": \"Madrid\",\n    \"state\": \"Madrid\",\n    \"postalCode\": \"28001\",\n    \"country\": \"España\"\n  },\n  \"paymentMethod\": \"credit_card\"\n}",
+        "form": []
+      },
+      "tests": [
+        {
+          "type": "set-env-var",
+          "custom": "json.id",
+          "action": "setto",
+          "value": "{{orderId}}"
+        }
+      ]
+    },
+    {
+      "id": "req-update-order-status",
+      "colId": "websocket-demo",
+      "containerId": "folder-orders",
+      "name": "✏️ Actualizar Estado de Orden (→ Webhook → WebSocket)",
+      "url": "http://localhost:3000/api/orders/{{orderId}}/status",
+      "method": "PATCH",
+      "sortNum": 20000,
+      "created": "2025-11-25T00:00:00.000Z",
+      "modified": "2025-11-25T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"status\": \"paid\"\n}",
+        "form": []
+      }
+    },
+    {
+      "id": "req-webhook-direct",
+      "colId": "websocket-demo",
+      "containerId": "folder-webhook",
+      "name": "🎯 Webhook Directo (→ WebSocket)",
+      "url": "http://localhost:3000/api/webhook/notificaciones",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2025-11-25T00:00:00.000Z",
+      "modified": "2025-11-25T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"id\": \"test-123\",\n  \"entity\": \"test\",\n  \"operation\": \"create\",\n  \"data\": {\n    \"message\": \"Esto es una prueba directa del webhook\",\n    \"timestamp\": \"2025-11-25T19:00:00.000Z\"\n  },\n  \"timestamp\": \"2025-11-25T19:00:00.000Z\"\n}",
+        "form": []
+      }
+    }
+  ]
+}
