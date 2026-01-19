@@ -1,0 +1,153 @@
+{
+  "name": "Payment Handler - UNIFIT",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook Payment",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Validar payload\nconst payload = items[0].json;\n\nif (!payload.paymentId || !payload.amount) {\n  throw new Error('Invalid payload');\n}\n\n// Normalizar datos\nreturn [{\n  json: {\n    paymentId: payload.paymentId,\n    amount: payload.amount,\n    currency: payload.currency || 'USD',\n    status: payload.type || 'succeeded',\n    metadata: payload.metadata || {},\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Validate & Normalize",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://payment-service:3002/payments/{{$json.paymentId}}/confirm",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "={{$json.status}}"
+            }
+          ]
+        }
+      },
+      "name": "Update Payment Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://rest-golang:3000/reservas/{{$json.metadata.reservationId}}/activate",
+        "method": "POST"
+      },
+      "name": "Activate Reservation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://websocket-server:8080",
+        "event": "payment_confirmed",
+        "sendData": true,
+        "dataToSend": "={{$json}}"
+      },
+      "name": "Send WebSocket Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@unifit.com",
+        "toEmail": "={{$json.metadata.userEmail}}",
+        "subject": "Pago Confirmado - UNIFIT",
+        "text": "Tu pago de {{$json.amount/100}} {{$json.currency}} ha sido confirmado.\\n\\nID de Pago: {{$json.paymentId}}\\n\\nGracias por tu preferencia."
+      },
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Obtener lista de partners\nconst partners = [\n  {\n    id: 'partner_1',\n    name: 'Tours Paradise',\n    webhookUrl: 'http://partner1.com/webhooks',\n    hmacSecret: 'secret_123'\n  }\n];\n\nconst event = {\n  eventType: 'payment.succeeded',\n  timestamp: new Date().toISOString(),\n  data: items[0].json\n};\n\n// Generar firma HMAC\nconst crypto = require('crypto');\nconst outputs = [];\n\nfor (const partner of partners) {\n  const signature = crypto\n    .createHmac('sha256', partner.hmacSecret)\n    .update(JSON.stringify(event))\n    .digest('hex');\n  \n  outputs.push({\n    json: {\n      partnerUrl: partner.webhookUrl,\n      signature: signature,\n      event: event\n    }\n  });\n}\n\nreturn outputs;"
+      },
+      "name": "Prepare Partner Webhooks",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.partnerUrl}}",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-UNIFIT-Signature",
+              "value": "={{$json.signature}}"
+            },
+            {
+              "name": "X-UNIFIT-Event",
+              "value": "={{$json.event.eventType}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "jsonBody": "={{JSON.stringify($json.event)}}"
+      },
+      "name": "Notify Partners",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"received\": true, \"paymentId\": \"{{$json.paymentId}}\", \"status\": \"processed\"}"
+      },
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Payment": {
+      "main": [[{"node": "Validate & Normalize", "type": "main", "index": 0}]]
+    },
+    "Validate & Normalize": {
+      "main": [[{"node": "Update Payment Status", "type": "main", "index": 0}]]
+    },
+    "Update Payment Status": {
+      "main": [[{"node": "Activate Reservation", "type": "main", "index": 0}]]
+    },
+    "Activate Reservation": {
+      "main": [[
+        {"node": "Send WebSocket Notification", "type": "main", "index": 0},
+        {"node": "Send Confirmation Email", "type": "main", "index": 0},
+        {"node": "Prepare Partner Webhooks", "type": "main", "index": 0}
+      ]]
+    },
+    "Prepare Partner Webhooks": {
+      "main": [[{"node": "Notify Partners", "type": "main", "index": 0}]]
+    },
+    "Notify Partners": {
+      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "payment-handler-unifit"
+}

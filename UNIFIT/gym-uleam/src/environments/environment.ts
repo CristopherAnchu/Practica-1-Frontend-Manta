@@ -11,6 +11,11 @@ export const environment = {
   // WebSocket Server (Python) - Puerto 8080
   websocketUrl: 'http://localhost:8080',
   
+  // NUEVOS SERVICIOS - Segundo Parcial
+  authServiceUrl: 'http://localhost:3001/auth',
+  paymentServiceUrl: 'http://localhost:3002',
+  aiOrchestratorUrl: 'http://localhost:3003',
+  
   // Configuración de servicios
   endpoints: {
     rest: {

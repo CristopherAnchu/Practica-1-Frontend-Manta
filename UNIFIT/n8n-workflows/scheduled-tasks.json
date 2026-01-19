@@ -1,0 +1,266 @@
+{
+  "name": "Scheduled Tasks Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "daily-trigger",
+      "name": "Daily Trigger (8am)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://graphql:4000/graphql",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "query { reporteReservas { total, activas, completadas, canceladas } }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "generate-report",
+      "name": "Generate Daily Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "sendEmail",
+        "fromEmail": "noreply@unifit.com",
+        "toEmail": "admin@unifit.com",
+        "subject": "=Reporte Diario UNIFIT - {{$now.format('DD/MM/YYYY')}}",
+        "message": "=Estadísticas del día:\\n\\nTotal Reservas: {{$json.data.reporteReservas.total}}\\nActivas: {{$json.data.reporteReservas.activas}}\\nCompletadas: {{$json.data.reporteReservas.completadas}}\\nCanceladas: {{$json.data.reporteReservas.canceladas}}",
+        "options": {}
+      },
+      "id": "send-email-report",
+      "name": "Send Email Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 7
+            }
+          ]
+        }
+      },
+      "id": "weekly-trigger",
+      "name": "Weekly Cleanup Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "http://rest-golang:3000/cleanup/old-reservations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "olderThan",
+              "value": "30"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cleanup-old-data",
+      "name": "Cleanup Old Reservations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "hourly-trigger",
+      "name": "Hourly Reminders Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 700]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://rest-golang:3000/reservas/upcoming",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "hours",
+              "value": "2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-upcoming-reservations",
+      "name": "Get Upcoming Reservations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 700]
+    },
+    {
+      "parameters": {
+        "batching": {
+          "batch": {
+            "batchSize": 10,
+            "batchInterval": 1000
+          }
+        }
+      },
+      "id": "loop-reservations",
+      "name": "Loop Reservations",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [650, 700]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://websocket-server:8080/emit",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"event\": \"reservation-reminder\",\n  \"data\": {\n    \"userId\": \"{{$json.userId}}\",\n    \"reservationId\": \"{{$json.id}}\",\n    \"message\": \"Tu reserva comienza en 2 horas\"\n  }\n}",
+        "options": {}
+      },
+      "id": "send-reminder",
+      "name": "Send Reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 700]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "health-check-trigger",
+      "name": "Health Check Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 900]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://rest-golang:3000/health",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "check-rest-api",
+      "name": "Check REST API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 900]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://graphql:4000/health",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "check-graphql",
+      "name": "Check GraphQL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 900]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://ai-orchestrator:3003/health",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "check-ai",
+      "name": "Check AI Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 900]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Consolidar resultados de health checks\nconst services = [\n  { name: 'REST API', status: $input.item(0).json.status },\n  { name: 'GraphQL', status: $input.item(1).json.status },\n  { name: 'AI Service', status: $input.item(2).json.status }\n];\n\nconst allHealthy = services.every(s => s.status === 'ok');\n\nif (!allHealthy) {\n  // Enviar alerta\n  const failedServices = services.filter(s => s.status !== 'ok');\n  return {\n    alert: true,\n    message: `Servicios caídos: ${failedServices.map(s => s.name).join(', ')}`,\n    timestamp: new Date().toISOString()\n  };\n}\n\nreturn {\n  alert: false,\n  message: 'All services healthy',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "consolidate-health",
+      "name": "Consolidate Health Status",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 900]
+    }
+  ],
+  "connections": {
+    "Daily Trigger (8am)": {
+      "main": [[{ "node": "Generate Daily Report", "type": "main", "index": 0 }]]
+    },
+    "Generate Daily Report": {
+      "main": [[{ "node": "Send Email Report", "type": "main", "index": 0 }]]
+    },
+    "Weekly Cleanup Trigger": {
+      "main": [[{ "node": "Cleanup Old Reservations", "type": "main", "index": 0 }]]
+    },
+    "Hourly Reminders Trigger": {
+      "main": [[{ "node": "Get Upcoming Reservations", "type": "main", "index": 0 }]]
+    },
+    "Get Upcoming Reservations": {
+      "main": [[{ "node": "Loop Reservations", "type": "main", "index": 0 }]]
+    },
+    "Loop Reservations": {
+      "main": [[{ "node": "Send Reminder", "type": "main", "index": 0 }]]
+    },
+    "Health Check Trigger": {
+      "main": [[{ "node": "Check REST API", "type": "main", "index": 0 }]]
+    },
+    "Check REST API": {
+      "main": [[{ "node": "Check GraphQL", "type": "main", "index": 0 }]]
+    },
+    "Check GraphQL": {
+      "main": [[{ "node": "Check AI Service", "type": "main", "index": 0 }]]
+    },
+    "Check AI Service": {
+      "main": [[{ "node": "Consolidate Health Status", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {}
+}

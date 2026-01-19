@@ -7,6 +7,8 @@ import { UsersAdmin } from './pages/administrador/users/users';
 import { ReservasAdmin } from './pages/administrador/reservas/reservas';
 import { DashboardGraphqlComponent } from './pages/dashboard-graphql/dashboard-graphql.component';
 import { DashboardRealtimeComponent } from './pages/dashboard-realtime/dashboard-realtime.component';
+import { ChatComponent } from './pages/chat/chat.component';
+import { PaymentComponent } from './pages/payment/payment.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -25,5 +27,15 @@ export const routes: Routes = [
     path: 'dashboard-realtime',
     component: DashboardRealtimeComponent,
     title: 'Dashboard en Tiempo Real - UniFit'
+  },
+  {
+    path: 'chat',
+    component: ChatComponent,
+    title: 'Asistente AI - UniFit'
+  },
+  {
+    path: 'payment',
+    component: PaymentComponent,
+    title: 'Procesar Pago - UniFit'
   },
 ];

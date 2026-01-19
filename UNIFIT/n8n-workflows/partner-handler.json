@@ -1,0 +1,229 @@
+{
+  "name": "Partner Handler Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "partner-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-partner",
+      "name": "Webhook Partner",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Verificar firma HMAC\nconst crypto = require('crypto');\nconst receivedSignature = $json.headers['x-unifit-signature'];\nconst apiKey = $json.headers['x-api-key'];\nconst payload = JSON.stringify($json.body);\n\n// Buscar partner por API key (simular consulta DB)\nconst partnerSecret = $env.PARTNER_SECRET || 'partner-secret-key';\n\n// Generar firma esperada\nconst expectedSignature = crypto\n  .createHmac('sha256', partnerSecret)\n  .update(payload)\n  .digest('hex');\n\n// Validar\nif (receivedSignature !== expectedSignature) {\n  return {\n    valid: false,\n    error: 'Invalid signature',\n    status: 401\n  };\n}\n\nreturn {\n  valid: true,\n  apiKey: apiKey,\n  eventType: $json.body.eventType,\n  data: $json.body.data\n};"
+      },
+      "id": "validate-hmac",
+      "name": "Validate HMAC",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.valid}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "signature-check",
+      "name": "Signature Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "status",
+              "value": 401
+            }
+          ],
+          "string": [
+            {
+              "name": "message",
+              "value": "Invalid signature or API key"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [850, 450]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rest-golang:3000/partner-events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "eventType",
+              "value": "={{$json.eventType}}"
+            },
+            {
+              "name": "data",
+              "value": "={{JSON.stringify($json.data)}}"
+            },
+            {
+              "name": "partnerId",
+              "value": "={{$json.apiKey}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "process-partner-event",
+      "name": "Process Partner Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.eventType}}",
+              "operation": "equals",
+              "value2": "tour.offer"
+            }
+          ]
+        }
+      },
+      "id": "event-type-check",
+      "name": "Is Tour Offer?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ai-orchestrator:3003/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"message\": \"Analizar oferta de tour: {{$json.data.tourName}} por ${{$json.data.price}}\",\n  \"userId\": \"{{$json.data.userId}}\"\n}",
+        "options": {}
+      },
+      "id": "ai-analyze-offer",
+      "name": "AI Analyze Offer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://websocket-server:8080/emit",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"event\": \"partner-offer\",\n  \"data\": {\n    \"userId\": \"{{$json.data.userId}}\",\n    \"offer\": {{JSON.stringify($json.data)}},\n    \"aiAnalysis\": {{JSON.stringify($json.analysis)}}\n  }\n}",
+        "options": {}
+      },
+      "id": "notify-user",
+      "name": "Notify User WebSocket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 50]
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "status",
+              "value": 200
+            }
+          ],
+          "string": [
+            {
+              "name": "message",
+              "value": "Event processed successfully"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [1650, 150]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{JSON.stringify($json)}}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Partner": {
+      "main": [[{ "node": "Validate HMAC", "type": "main", "index": 0 }]]
+    },
+    "Validate HMAC": {
+      "main": [[{ "node": "Signature Valid?", "type": "main", "index": 0 }]]
+    },
+    "Signature Valid?": {
+      "main": [
+        [{ "node": "Process Partner Event", "type": "main", "index": 0 }],
+        [{ "node": "Error Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Process Partner Event": {
+      "main": [[{ "node": "Is Tour Offer?", "type": "main", "index": 0 }]]
+    },
+    "Is Tour Offer?": {
+      "main": [
+        [{ "node": "AI Analyze Offer", "type": "main", "index": 0 }],
+        [{ "node": "Success Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "AI Analyze Offer": {
+      "main": [[{ "node": "Notify User WebSocket", "type": "main", "index": 0 }]]
+    },
+    "Notify User WebSocket": {
+      "main": [[{ "node": "Success Response", "type": "main", "index": 0 }]]
+    },
+    "Success Response": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    },
+    "Error Response": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {}
+}
