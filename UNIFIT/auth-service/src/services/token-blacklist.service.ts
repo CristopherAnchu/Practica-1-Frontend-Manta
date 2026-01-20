@@ -1,21 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { createClient, RedisClientType } from 'redis';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 
 @Injectable()
-export class TokenBlacklistService {
-  private redisClient: RedisClientType;
+export class TokenBlacklistService implements OnModuleDestroy {
+  // En memoria en lugar de Redis para facilitar ejecución local sin dependencias
+  private blacklist: Map<string, number> = new Map();
 
   constructor() {
-    this.redisClient = createClient({
-      socket: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-      },
-      password: process.env.REDIS_PASSWORD || undefined,
-    });
-
-    this.redisClient.on('error', (err) => console.error('Redis Client Error', err));
-    this.redisClient.connect();
+    console.log('[TokenBlacklistService] Running in IN-MEMORY mode (Redis disabled)');
   }
 
   /**
@@ -28,10 +19,12 @@ export class TokenBlacklistService {
       return;
     }
 
-    const ttl = decodedToken.exp - Math.floor(Date.now() / 1000);
+    // exp está en segundos, convertir a milisegundos
+    const expirationTime = decodedToken.exp * 1000;
     
-    if (ttl > 0) {
-      await this.redisClient.setEx(`blacklist:${token}`, ttl, 'revoked');
+    // Solo agregar si no ha expirado
+    if (expirationTime > Date.now()) {
+      this.blacklist.set(token, expirationTime);
     }
   }
 
@@ -39,8 +32,20 @@ export class TokenBlacklistService {
    * Verifica si un token está en la blacklist
    */
   async isBlacklisted(token: string): Promise<boolean> {
-    const result = await this.redisClient.get(`blacklist:${token}`);
-    return result !== null;
+    const expirationTime = this.blacklist.get(token);
+    
+    // Si no está en el mapa, no está en blacklist
+    if (!expirationTime) {
+      return false;
+    }
+
+    // Si ya expiró, eliminar del mapa y retornar false
+    if (Date.now() > expirationTime) {
+      this.blacklist.delete(token);
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -60,9 +65,9 @@ export class TokenBlacklistService {
   }
 
   /**
-   * Limpia la conexión de Redis
+   * Limpia recursos al destruir el módulo
    */
   async onModuleDestroy() {
-    await this.redisClient.quit();
+    this.blacklist.clear();
   }
 }

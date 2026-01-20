@@ -245,7 +245,6 @@ class LLMAdapterFactory:
     def create(provider: str) -> LLMAdapter:
         providers = {
             "gemini": GeminiAdapter,
-            "openai": OpenAIAdapter,
             "mock": MockLLMAdapter
         }
         

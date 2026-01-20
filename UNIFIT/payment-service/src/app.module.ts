@@ -17,7 +17,7 @@ import { StripeAdapter } from './adapters/stripe.adapter';
       url: process.env.DATABASE_URL,
       entities: [Payment, Partner, WebhookEvent],
       synchronize: true,
-      ssl: { rejectUnauthorized: false },
+      ssl: false,
       logging: ['error', 'warn'],
     }),
     TypeOrmModule.forFeature([Payment, Partner, WebhookEvent]),
