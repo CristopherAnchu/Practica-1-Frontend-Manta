@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth.module';
-import { User, RefreshToken } from './entities/user.entity';
+import { User } from './entities/user.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
+import { RevokedToken } from './entities/revoked-token.entity';
 
 @Module({
   imports: [
@@ -12,7 +14,7 @@ import { User, RefreshToken } from './entities/user.entity';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
-      entities: [User, RefreshToken],
+      entities: [User, RefreshToken, RevokedToken],
       synchronize: true, // Solo para desarrollo, usar migraciones en producción
       ssl: {
         rejectUnauthorized: false,

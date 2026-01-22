@@ -1,73 +1,52 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, LessThan } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
+import { RevokedToken } from '../entities/revoked-token.entity';
 
 @Injectable()
-export class TokenBlacklistService implements OnModuleDestroy {
-  // En memoria en lugar de Redis para facilitar ejecución local sin dependencias
-  private blacklist: Map<string, number> = new Map();
-
-  constructor() {
-    console.log('[TokenBlacklistService] Running in IN-MEMORY mode (Redis disabled)');
-  }
+export class TokenBlacklistService {
+  constructor(
+    @InjectRepository(RevokedToken)
+    private revokedRepo: Repository<RevokedToken>,
+    private jwtService: JwtService,
+  ) {}
 
   /**
-   * Agrega un token a la blacklist
+   * Agrega un token a la blacklist persistente
    */
   async addToBlacklist(token: string): Promise<void> {
-    // Extraer tiempo de expiración del token
-    const decodedToken = this.decodeToken(token);
-    if (!decodedToken || !decodedToken.exp) {
-      return;
+    const decoded: any = this.jwtService.decode(token);
+    const expMs = decoded?.exp ? decoded.exp * 1000 : null;
+
+    if (!expMs || expMs <= Date.now()) {
+      return; // no almacenar tokens ya expirados o sin exp
     }
 
-    // exp está en segundos, convertir a milisegundos
-    const expirationTime = decodedToken.exp * 1000;
-    
-    // Solo agregar si no ha expirado
-    if (expirationTime > Date.now()) {
-      this.blacklist.set(token, expirationTime);
-    }
+    await this.revokedRepo.upsert(
+      {
+        token,
+        expiresAt: new Date(expMs),
+      },
+      ['token'],
+    );
+
+    await this.cleanExpired();
   }
 
   /**
-   * Verifica si un token está en la blacklist
+   * Verifica si un token está revocado
    */
   async isBlacklisted(token: string): Promise<boolean> {
-    const expirationTime = this.blacklist.get(token);
-    
-    // Si no está en el mapa, no está en blacklist
-    if (!expirationTime) {
-      return false;
-    }
-
-    // Si ya expiró, eliminar del mapa y retornar false
-    if (Date.now() > expirationTime) {
-      this.blacklist.delete(token);
-      return false;
-    }
-
-    return true;
+    await this.cleanExpired();
+    const record = await this.revokedRepo.findOne({ where: { token } });
+    return Boolean(record);
   }
 
   /**
-   * Decodifica un JWT sin verificar (solo para extraer payload)
+   * Borra tokens expirados para mantener la tabla limpia
    */
-  private decodeToken(token: string): any {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        return null;
-      }
-      const payload = Buffer.from(parts[1], 'base64').toString('utf-8');
-      return JSON.parse(payload);
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Limpia recursos al destruir el módulo
-   */
-  async onModuleDestroy() {
-    this.blacklist.clear();
+  private async cleanExpired(): Promise<void> {
+    await this.revokedRepo.delete({ expiresAt: LessThan(new Date()) });
   }
 }

@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { RefreshToken } from './refresh-token.entity';
 
 export enum UserTipo {
   ADMINISTRADOR = 'ADMINISTRADOR',
@@ -49,28 +50,4 @@ export class User {
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens: RefreshToken[];
-}
-
-@Entity('refresh_tokens')
-export class RefreshToken {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ type: 'text' })
-  token: string;
-
-  @Column({ name: 'user_id' })
-  userId: string;
-
-  @Column({ name: 'expires_at', type: 'timestamp' })
-  expiresAt: Date;
-
-  @Column({ default: false })
-  revoked: boolean;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @Column(() => User)
-  user: User;
 }
