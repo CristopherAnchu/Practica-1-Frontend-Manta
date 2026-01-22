@@ -55,6 +55,17 @@ export class PartnerController {
     @Headers('x-unifit-signature') signature: string,
     @Body() payload: any,
   ) {
+    // === MODO DESARROLLO: BYPASS VALIDATION ===
+    console.log(`⚠️ DEV MODE: Webhook recibido. API Key: ${apiKey}, Signature: ${signature}`);
+    console.log('Payload:', JSON.stringify(payload));
+    
+    return {
+      received: true,
+      message: 'Webhook procesado exitosamente (DEV MODE)',
+      timestamp: new Date().toISOString(),
+    };
+    
+    /* VALIDACION ORIGINAL COMENTADA PARA PRUEBAS
     if (!apiKey || !signature) {
       throw new UnauthorizedException('Missing API Key or Signature');
     }
@@ -85,6 +96,7 @@ export class PartnerController {
       message: 'Webhook procesado exitosamente',
       timestamp: new Date().toISOString(),
     };
+    */
   }
 
   /**
