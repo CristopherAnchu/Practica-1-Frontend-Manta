@@ -24,7 +24,7 @@
     },
     {
       "parameters": {
-        "url": "http://payment-service:3002/payments/{{$json.paymentId}}/confirm",
+        "url": "http://host.docker.internal:3002/payments/{{$json.paymentId}}/confirm",
         "method": "POST",
         "sendBody": true,
         "bodyParameters": {
@@ -43,7 +43,7 @@
     },
     {
       "parameters": {
-        "url": "http://rest-golang:3000/reservas/{{$json.metadata.reservationId}}/activate",
+        "url": "http://host.docker.internal:3000/reservas/{{$json.metadata.reservationId}}/activate",
         "method": "POST"
       },
       "name": "Activate Reservation",
@@ -54,7 +54,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://websocket-server:8080/api/notify",
+        "url": "http://host.docker.internal:8080/api/notify",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"type\": \"payment_confirmed\",\n  \"data\": {{JSON.stringify($json)}}\n}",

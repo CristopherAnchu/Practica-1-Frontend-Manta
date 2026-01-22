@@ -21,7 +21,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "http://graphql:4000/graphql",
+        "url": "http://host.docker.internal:4000/graphql",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -74,7 +74,7 @@
     {
       "parameters": {
         "method": "DELETE",
-        "url": "http://rest-golang:3000/cleanup/old-reservations",
+        "url": "http://host.docker.internal:3000/cleanup/old-reservations",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -112,7 +112,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "http://rest-golang:3000/reservas/upcoming",
+        "url": "http://host.docker.internal:3000/reservas/upcoming",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -148,7 +148,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://websocket-server:8080/api/notify",
+        "url": "http://host.docker.internal:8080/api/notify",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"type\": \"reservation-reminder\",\n  \"data\": {\n    \"userId\": \"{{$json.userId}}\",\n    \"reservationId\": \"{{$json.id}}\",\n    \"message\": \"Tu reserva comienza en 2 horas\"\n  }\n}",
@@ -180,7 +180,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "http://rest-golang:3000/health",
+        "url": "http://host.docker.internal:3000/health",
         "options": {
           "timeout": 5000
         }
@@ -194,7 +194,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "http://graphql:4000/health",
+        "url": "http://host.docker.internal:4000/health",
         "options": {
           "timeout": 5000
         }
@@ -208,7 +208,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "http://ai-orchestrator:3003/health",
+        "url": "http://host.docker.internal:3003/health",
         "options": {
           "timeout": 5000
         }

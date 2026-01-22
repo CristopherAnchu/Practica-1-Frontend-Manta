@@ -45,7 +45,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://ai-orchestrator:3003/chat",
+        "url": "http://host.docker.internal:3003/chat",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"message\": \"{{$json.message}}\",\n  \"userId\": \"{{$json.userId}}\"\n}",
@@ -60,7 +60,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://ai-orchestrator:3003/chat/multimodal",
+        "url": "http://host.docker.internal:3003/chat/multimodal",
         "sendBody": true,
         "contentType": "multipart-form-data",
         "bodyParameters": {
@@ -113,7 +113,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://rest-golang:3000/mcp-audit",
+        "url": "http://host.docker.internal:3000/mcp-audit",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"userId\": \"{{$json.userId}}\",\n  \"toolsExecuted\": {{JSON.stringify($json.toolsExecuted)}},\n  \"timestamp\": \"{{$now.toISOString()}}\"\n}",
@@ -128,7 +128,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://websocket-server:8080/api/notify",
+        "url": "http://host.docker.internal:8080/api/notify",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"type\": \"ai-response\",\n  \"data\": {\n    \"userId\": \"{{$json.userId}}\",\n    \"response\": \"{{$json.response}}\",\n    \"actionsExecuted\": {{JSON.stringify($json.toolsExecuted)}}\n  }\n}",
