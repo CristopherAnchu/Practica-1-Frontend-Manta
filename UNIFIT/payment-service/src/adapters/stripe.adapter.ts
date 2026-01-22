@@ -58,15 +58,11 @@ export class StripeAdapter implements PaymentProvider {
     };
   }
 
-  async processWebhook(payload: any, signature: string): Promise<NormalizedWebhookEvent> {
+  async processWebhook(rawBody: Buffer | string, signature: string): Promise<NormalizedWebhookEvent> {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
     
     // Verificar firma del webhook
-    const event = this.stripe.webhooks.constructEvent(
-      JSON.stringify(payload),
-      signature,
-      webhookSecret,
-    );
+    const event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
 
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
