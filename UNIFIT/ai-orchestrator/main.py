@@ -42,6 +42,9 @@ class ChatMessage(BaseModel):
     message: str
     userId: Optional[str] = None
     conversationId: Optional[str] = None
+    # Opcional: permitir especificar proveedor y apiKey por petición
+    provider: Optional[str] = None
+    apiKey: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -67,8 +70,13 @@ async def chat(message: ChatMessage):
     Procesa mensajes de texto y ejecuta herramientas MCP
     """
     try:
+        # Si la petición incluye proveedor/apiKey, crear un adapter temporal
+        adapter = llm_adapter
+        if message.provider:
+            adapter = LLMAdapterFactory.create(message.provider, message.apiKey)
+
         # Procesar mensaje con el LLM
-        response = await llm_adapter.process_message(
+        response = await adapter.process_message(
             message.message,
             user_id=message.userId,
             conversation_id=message.conversationId,
@@ -117,7 +125,7 @@ async def chat_multimodal(
                 extracted_text = await multimodal_processor.process_pdf(file_content)
                 message += f"\n\n[Texto extraído de PDF]: {extracted_text}"
 
-        # Procesar con LLM
+        # Procesar con LLM (usar adapter por defecto)
         response = await llm_adapter.process_message(
             message,
             user_id=userId,
