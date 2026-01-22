@@ -31,8 +31,9 @@ class GeminiAdapter(LLMAdapter):
         import google.generativeai as genai
         api_key = os.getenv("GEMINI_API_KEY")
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
-        print("✅ Gemini Adapter inicializado")
+        # Usando gemini-2.5-flash (último modelo disponible)
+        self.model = genai.GenerativeModel('models/gemini-2.5-flash')
+        print("✅ Gemini Adapter inicializado (gemini-2.5-flash)")
     
     async def process_message(
         self, 
@@ -81,7 +82,7 @@ class GeminiAdapter(LLMAdapter):
             return {
                 "text": f"Error al procesar mensaje: {str(e)}",
                 "tools_used": [],
-                "conversation_id": conversation_id
+                "conversation_id": conversation_id or "error"
             }
     
     def _build_system_prompt(self, tools: Optional[List[Dict]]) -> str:
@@ -242,11 +243,23 @@ class LLMAdapterFactory:
     """Factory para crear adapters según configuración"""
     
     @staticmethod
-    def create(provider: str) -> LLMAdapter:
+    def create(provider: str, api_key: str = None) -> LLMAdapter:
+        """Create an adapter for the given provider. If api_key is provided,
+        export it to the environment variable expected by the adapter so it
+        can initialize with the given key."""
         providers = {
             "gemini": GeminiAdapter,
+            "openai": OpenAIAdapter,
             "mock": MockLLMAdapter
         }
-        
+
+        # If an api_key is provided, set the env var expected by each provider
+        if api_key:
+            import os
+            if provider.lower() == 'openai':
+                os.environ['OPENAI_API_KEY'] = api_key
+            elif provider.lower() == 'gemini':
+                os.environ['GEMINI_API_KEY'] = api_key
+
         adapter_class = providers.get(provider.lower(), MockLLMAdapter)
         return adapter_class()
