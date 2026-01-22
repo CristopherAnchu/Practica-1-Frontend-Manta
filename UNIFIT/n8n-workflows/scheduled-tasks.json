@@ -35,17 +35,12 @@
     },
     {
       "parameters": {
-        "operation": "sendEmail",
-        "fromEmail": "noreply@unifit.com",
-        "toEmail": "admin@unifit.com",
-        "subject": "=Reporte Diario UNIFIT - {{$now.format('DD/MM/YYYY')}}",
-        "message": "=Total Reservas encontradas: {{$json.data.reservas.length}}",
-        "options": {}
+        "jsCode": "// Simulating Email Sending\nconst subject = \"Reporte Diario UNIFIT - \" + new Date().toLocaleDateString();\n// Safety check for data structure\nconst reservas = $input.item.json.data ? $input.item.json.data.reservas : [];\nconst message = \"Total Reservas encontradas: \" + reservas.length;\n\nconsole.log(\"--- MOCK EMAIL ---\");\nconsole.log(\"Subject:\", subject);\nconsole.log(\"Message:\", message);\nconsole.log(\"------------------\");\n\nreturn { sent: true, subject, message };"
       },
       "id": "send-email-report",
-      "name": "Send Email Report",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
+      "name": "Log Email Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
       "position": [650, 300]
     },
     {
@@ -215,11 +210,11 @@
     },
     {
       "parameters": {
-        "functionCode": "// Consolidar resultados de health checks\nconst services = [\n  { name: 'REST API', status: $input.item(0).json.status },\n  { name: 'GraphQL', status: $input.item(1).json.status },\n  { name: 'AI Service', status: $input.item(2).json.status }\n];\n\nconst allHealthy = services.every(s => s.status === 'ok');\n\nif (!allHealthy) {\n  // Enviar alerta\n  const failedServices = services.filter(s => s.status !== 'ok');\n  return {\n    alert: true,\n    message: `Servicios caídos: ${failedServices.map(s => s.name).join(', ')}`,\n    timestamp: new Date().toISOString()\n  };\n}\n\nreturn {\n  alert: false,\n  message: 'All services healthy',\n  timestamp: new Date().toISOString()\n};"
+        "jsCode": "try {\n  // Access outputs from previous nodes\n  // Note: Using efficient selector syntax available in Code node\n  const rest = $('Check REST API').first().json;\n  const graphql = $('Check GraphQL').first().json;\n  const ai = $('Check AI Service').first().json;\n\n  const services = [\n    { name: 'REST API', status: rest.status || 'error' },\n    { name: 'GraphQL', status: graphql.status || 'error' },\n    { name: 'AI Service', status: ai.status || 'error' }\n  ];\n\n  const failed = services.filter(s => s.status !== 'ok');\n\n  if (failed.length > 0) {\n    return {\n      alert: true,\n      message: 'Servicios caídos: ' + failed.map(s => s.name).join(', '),\n      timestamp: new Date().toISOString()\n    };\n  }\n\n  return {\n    alert: false,\n    message: 'All services healthy',\n    timestamp: new Date().toISOString()\n  };\n} catch (e) {\n  return { alert: true, message: 'Health check failed to execute: ' + e.message };\n}"
       },
       "id": "consolidate-health",
       "name": "Consolidate Health Status",
-      "type": "n8n-nodes-base.function",
+      "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [1050, 900]
     }
@@ -229,7 +224,7 @@
       "main": [[{ "node": "Generate Daily Report", "type": "main", "index": 0 }]]
     },
     "Generate Daily Report": {
-      "main": [[{ "node": "Send Email Report", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Log Email Report", "type": "main", "index": 0 }]]
     },
     "Weekly Cleanup Trigger": {
       "main": [[{ "node": "Cleanup Old Reservations", "type": "main", "index": 0 }]]
