@@ -88,9 +88,27 @@ export class PaymentService {
   /**
    * Procesa un webhook de la pasarela de pago
    */
-  async processPaymentWebhook(payload: any, signature?: string): Promise<void> {
+  async processPaymentWebhook(payload: Buffer | string | any, signature?: string): Promise<void> {
     // Normalizar webhook usando el adapter
-    const normalizedEvent = await this.paymentProvider.processWebhook(payload, signature);
+    const useMock = process.env.USE_MOCK_ADAPTER === 'true';
+
+    let normalizedEvent;
+
+    if (useMock) {
+      // Para Mock, parseamos JSON si viene como Buffer/string
+      let parsedPayload = payload;
+      if (payload instanceof Buffer) {
+        parsedPayload = JSON.parse(payload.toString('utf-8'));
+      } else if (typeof payload === 'string') {
+        parsedPayload = JSON.parse(payload);
+      }
+      normalizedEvent = await this.paymentProvider.processWebhook(parsedPayload);
+    } else {
+      if (!signature) {
+        throw new Error('Missing signature for webhook');
+      }
+      normalizedEvent = await this.paymentProvider.processWebhook(payload, signature);
+    }
 
     // Guardar evento
     const webhookEvent = this.webhookEventRepository.create({

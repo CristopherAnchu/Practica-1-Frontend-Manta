@@ -1,9 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import * as bodyParser from 'body-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  // Necesitamos el raw body para verificar firmas de webhooks (Stripe/HMAC)
   const app = await NestFactory.create(AppModule);
+
+  // Raw body solo para la ruta de webhook de pagos
+  app.use('/payments/webhook', bodyParser.raw({ type: '*/*' }));
 
   app.enableCors({
     origin: process.env.CORS_ORIGIN || '*',

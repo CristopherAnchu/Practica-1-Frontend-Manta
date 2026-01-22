@@ -2,12 +2,14 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { Payment, Partner, WebhookEvent } from './entities/payment.entity';
+import { PartnerWebhookLog } from './entities/partner-webhook-log.entity';
 import { PaymentService } from './services/payment.service';
 import { PartnerService } from './services/partner.service';
 import { PaymentController } from './controllers/payment.controller';
 import { PartnerController } from './controllers/partner.controller';
 import { MockPaymentAdapter } from './adapters/mock-payment.adapter';
 import { StripeAdapter } from './adapters/stripe.adapter';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -15,14 +17,14 @@ import { StripeAdapter } from './adapters/stripe.adapter';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
-      entities: [Payment, Partner, WebhookEvent],
+      entities: [Payment, Partner, WebhookEvent, PartnerWebhookLog],
       synchronize: true,
       ssl: false,
       logging: ['error', 'warn'],
     }),
-    TypeOrmModule.forFeature([Payment, Partner, WebhookEvent]),
+    TypeOrmModule.forFeature([Payment, Partner, WebhookEvent, PartnerWebhookLog]),
   ],
   controllers: [PaymentController, PartnerController],
-  providers: [PaymentService, PartnerService, MockPaymentAdapter, StripeAdapter],
+  providers: [PaymentService, PartnerService, MockPaymentAdapter, StripeAdapter, JwtAuthGuard],
 })
 export class AppModule {}

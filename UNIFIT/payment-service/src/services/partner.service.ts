@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import { Partner } from '../entities/payment.entity';
 import { RegisterPartnerDto, PartnerWebhookEvent } from '../dto/partner.dto';
+import { PartnerWebhookLog, WebhookDirection } from '../entities/partner-webhook-log.entity';
 
 @Injectable()
 export class PartnerService {
   constructor(
     @InjectRepository(Partner)
     private partnerRepository: Repository<Partner>,
+    @InjectRepository(PartnerWebhookLog)
+    private webhookLogRepository: Repository<PartnerWebhookLog>,
   ) {}
 
   /**
@@ -56,28 +59,37 @@ export class PartnerService {
       return;
     }
 
-    // Generar firma HMAC
     const signature = this.generateHmacSignature(event, partner.hmacSecret);
 
-    // Enviar webhook (esto debería hacerse de forma asíncrona en producción)
-    try {
-      const response = await fetch(partner.webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-UNIFIT-Signature': signature,
-          'X-UNIFIT-Event': event.eventType,
-        },
-        body: JSON.stringify(event),
-      });
+    // Enviar webhook con reintentos sencillos (3 intentos con backoff exponencial)
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await fetch(partner.webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-UNIFIT-Signature': signature,
+            'X-UNIFIT-Event': event.eventType,
+          },
+          body: JSON.stringify(event),
+        });
 
-      if (!response.ok) {
-        console.error(`Error enviando webhook a ${partner.name}: ${response.statusText}`);
-      } else {
-        console.log(`✅ Webhook enviado exitosamente a ${partner.name}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} ${response.statusText}`);
+        }
+
+        await this.logWebhook(WebhookDirection.OUTBOUND, partner.id, event.eventType, event, signature, true);
+        console.log(`✅ Webhook enviado exitosamente a ${partner.name} (intento ${attempt})`);
+        return;
+      } catch (error) {
+        console.error(`Error enviando webhook a ${partner.name} (intento ${attempt}):`, error);
+        await this.logWebhook(WebhookDirection.OUTBOUND, partner?.id ?? null, event.eventType, event, signature, false);
+        if (attempt < maxAttempts) {
+          const delayMs = Math.pow(2, attempt) * 500; // 1s, 2s, 4s
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
       }
-    } catch (error) {
-      console.error(`Error enviando webhook a ${partner.name}:`, error);
     }
   }
 
@@ -90,6 +102,34 @@ export class PartnerService {
       Buffer.from(signature),
       Buffer.from(expectedSignature)
     );
+  }
+
+  /**
+   * Expone logging para webhooks entrantes (usable por controller)
+   */
+  async logInboundWebhook(partnerId: string, eventType: string, payload: any, signature: string | null, valid: boolean): Promise<void> {
+    await this.logWebhook(WebhookDirection.INBOUND, partnerId, eventType, payload, signature, valid);
+  }
+
+  /**
+   * Registra en BD el tráfico webhook (entrante/saliente)
+   */
+  private async logWebhook(
+    direction: WebhookDirection,
+    partnerId: string | null,
+    eventType: string,
+    payload: any,
+    signature: string | null,
+    valid: boolean,
+  ): Promise<void> {
+    await this.webhookLogRepository.save({
+      direction,
+      partnerId,
+      eventType,
+      payload,
+      signature,
+      valid,
+    });
   }
 
   /**
