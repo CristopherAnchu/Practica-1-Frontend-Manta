@@ -8,30 +8,43 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "name": "Webhook Payment",
+      "name": "Webhook Payment1",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [250, 300]
+      "position": [
+        -704,
+        672
+      ],
+      "id": "233c2ce2-0dd2-4af2-a32c-0f0c1f0b2b96",
+      "webhookId": "e064204d-b526-4c42-bf0a-382340890d47"
     },
     {
       "parameters": {
-        "functionCode": "// Validar payload\nconst payload = items[0].json;\n\nif (!payload.paymentId || !payload.amount) {\n  throw new Error('Invalid payload');\n}\n\n// Normalizar datos\nreturn [{\n  json: {\n    paymentId: payload.paymentId,\n    amount: payload.amount,\n    currency: payload.currency || 'USD',\n    status: payload.type || 'succeeded',\n    metadata: payload.metadata || {},\n    timestamp: new Date().toISOString()\n  }\n}];"
+        "functionCode": "// Obtener payload real del webhook\nconst payload = items[0].json.body;\n\n// Validación defensiva\nif (!payload || !payload.paymentId || !payload.amount) {\n  throw new Error(\n    'Invalid payload: paymentId or amount missing'\n  );\n}\n\n// Normalizar datos\nreturn [{\n  json: {\n    paymentId: payload.paymentId,\n    amount: payload.amount,\n    currency: payload.currency ?? 'USD',\n    status: payload.type ?? 'succeeded',\n    metadata: payload.metadata ?? {},\n    timestamp: new Date().toISOString()\n  }\n}];\n"
       },
-      "name": "Validate & Normalize",
+      "name": "Validate & Normalize1",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [450, 300]
+      "position": [
+        -512,
+        672
+      ],
+      "id": "e459c8bd-68fc-4206-9ba9-365a960be35f"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:3000/reservas/{{$json.metadata.reservationId}}/activate",
+        "url": "=http://host.docker.internal:3000/reservas/{{$json.metadata.reservationId}}/activate",
         "options": {}
       },
-      "name": "Activate Reservation",
+      "name": "Activate Reservation1",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [650, 300]
+      "position": [
+        -304,
+        672
+      ],
+      "id": "02adebca-4ab4-4f26-b20d-ff80f6825ced"
     },
     {
       "parameters": {
@@ -42,28 +55,27 @@
         "jsonBody": "={\n  \"type\": \"payment_confirmed\",\n  \"data\": {{JSON.stringify($json)}}\n}",
         "options": {}
       },
-      "name": "Send WebSocket Notification",
+      "name": "Send WebSocket Notification1",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1050, 200]
+      "position": [
+        96,
+        464
+      ],
+      "id": "7bc565f3-13f6-4ad8-8b58-18e4f4500572"
     },
     {
       "parameters": {
-        "jsCode": "// Simulating Email Sending\nconst email = $input.item.json.metadata ? $input.item.json.metadata.userEmail : 'unknown@example.com';\nconst subject = \"Pago Confirmado - UNIFIT\";\nconst amount = $input.item.json.amount / 100;\nconst currency = $input.item.json.currency;\n\nconsole.log(\"--- MOCK PAYMENT EMAIL ---\");\nconsole.log(\"To:\", email);\nconsole.log(\"Subject:\", subject);\nconsole.log(\"Amount:\", amount, currency);\nconsole.log(\"--------------------------\");\n\nreturn { sent: true, to: email, subject };"
+        "functionCode": "// 1. Importar el módulo (esto funcionará tras el paso 1)\nconst crypto = require('crypto');\n\n// 2. Obtener lista de partners\nconst partners = [\n  {\n    id: 'partner_1',\n    name: 'Tours Paradise',\n    webhookUrl: 'http://host.docker.internal:3002/partners/webhook',\n    hmacSecret: 'secret_123'\n  }\n];\n\n// 3. El nodo Function recibe los datos en 'items'\nconst inputData = items[0].json;\n\nconst event = {\n  eventType: 'payment.succeeded',\n  timestamp: new Date().toISOString(),\n  data: inputData\n};\n\nconst outputs = [];\n\nfor (const partner of partners) {\n  // Generar firma HMAC SHA256\n  const signature = crypto\n    .createHmac('sha256', partner.hmacSecret)\n    .update(JSON.stringify(event))\n    .digest('hex');\n  \n  outputs.push({\n    json: {\n      partnerUrl: partner.webhookUrl,\n      signature: signature,\n      event: event\n    }\n  });\n}\n\nreturn outputs;"
       },
-      "name": "Log Confirmation Email",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 1,
-      "position": [1050, 400]
-    },
-    {
-      "parameters": {
-        "functionCode": "// Obtener lista de partners\nconst partners = [\n  {\n    id: 'partner_1',\n    name: 'Tours Paradise',\n    webhookUrl: 'http://host.docker.internal:3002/partners/webhook',\n    hmacSecret: 'secret_123'\n  }\n];\n\nconst event = {\n  eventType: 'payment.succeeded',\n  timestamp: new Date().toISOString(),\n  data: items[0].json\n};\n\n// Generar firma HMAC\nconst crypto = require('crypto');\nconst outputs = [];\n\nfor (const partner of partners) {\n  const signature = crypto\n    .createHmac('sha256', partner.hmacSecret)\n    .update(JSON.stringify(event))\n    .digest('hex');\n  \n  outputs.push({\n    json: {\n      partnerUrl: partner.webhookUrl,\n      signature: signature,\n      event: event\n    }\n  });\n}\n\nreturn outputs;"
-      },
-      "name": "Prepare Partner Webhooks",
+      "name": "Prepare Partner Webhooks1",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [1250, 300]
+      "position": [
+        288,
+        672
+      ],
+      "id": "d322862c-a2f3-4101-b459-562f7df3be5c"
     },
     {
       "parameters": {
@@ -87,44 +99,157 @@
         "jsonBody": "={{JSON.stringify($json.event)}}",
         "options": {}
       },
-      "name": "Notify Partners",
+      "name": "Notify Partners1",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1450, 300]
+      "position": [
+        496,
+        672
+      ],
+      "id": "2a29b2fa-bbc3-43e8-8100-bdcac442ccd7"
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\"received\": true, \"paymentId\": \"{{$json.paymentId}}\", \"status\": \"processed\"}"
+        "responseBody": "={\"received\": true, \"paymentId\": \"{{$json.paymentId}}\", \"status\": \"processed\"}",
+        "options": {}
       },
-      "name": "Respond",
+      "name": "Respond1",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1650, 300]
+      "position": [
+        688,
+        672
+      ],
+      "id": "0ff46ee8-46e7-49ee-8e16-4a2eb4c9d79c"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Acceder a los datos de normalización de pago\nconst paymentData = $( 'Validate & Normalize1' ).first().json;\n\n// 2. Acceder a la respuesta del servidor de activación\nconst activationData = $( 'Activate Reservation1' ).first().json;\n\n// Validaciones de seguridad\nconst email = paymentData.metadata?.userEmail;\nif (!email) {\n  throw new Error('Email del usuario no encontrado en los datos de pago');\n}\n\n// Procesar datos para el email\nconst amount = (paymentData.amount / 100).toFixed(2);\nconst currency = paymentData.currency || 'USD';\nconst reservationId = paymentData.metadata?.reservationId;\n\n// Subject\nconst subject = `✅ Confirmación: Reserva ${reservationId} Activada – UNIFIT`;\n\n// Cuerpo del email combinando ambas fuentes\nconst body = `\nHola,\n\nTenemos buenas noticias: tu pago ha sido procesado y tu reserva ya está activa.\n\n📌 Detalles del Pago (de Validate & Normalize):\n- ID de Transacción: ${paymentData.paymentId}\n- Monto: ${amount} ${currency}\n- Estado del Pago: ${paymentData.status}\n\n🚀 Detalles de la Activación (de Activate Reservation):\n- Reserva ID: ${reservationId}\n- Mensaje del Sistema: ${activationData.message || 'Activación completada con éxito'}\n- Fecha de Activación: ${new Date().toLocaleString()}\n\nTu acceso a UNIFIT ya está habilitado. ¡Disfrútalo!\n\nGracias por confiar en nosotros.\nEquipo UNIFIT 💪\n`.trim();\n\nreturn [\n  {\n    json: {\n      to: email,\n      subject,\n      message: body // Usamos \"message\" para que coincida con lo que espera tu nodo de Gmail\n    }\n  }\n];"
+      },
+      "name": "Log Confirmation Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        912
+      ],
+      "id": "603bbd53-dc1d-49c9-bca7-7069702ac123"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook Payment1').item.json.body.metadata.userEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        912
+      ],
+      "id": "4fed8fe8-6b70-4939-82e9-0e53e0523ba2",
+      "name": "Send a message",
+      "webhookId": "0cadeadd-5c4f-4e57-94a6-3b7066db3a2f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ENdSCeFVWb5mEgni",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
+  "pinData": {},
   "connections": {
-    "Webhook Payment": {
-      "main": [[{"node": "Validate & Normalize", "type": "main", "index": 0}]]
+    "Webhook Payment1": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Validate & Normalize": {
-      "main": [[{"node": "Activate Reservation", "type": "main", "index": 0}]]
+    "Validate & Normalize1": {
+      "main": [
+        [
+          {
+            "node": "Activate Reservation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Activate Reservation": {
-      "main": [[
-        {"node": "Send WebSocket Notification", "type": "main", "index": 0},
-        {"node": "Log Confirmation Email", "type": "main", "index": 0},
-        {"node": "Prepare Partner Webhooks", "type": "main", "index": 0}
-      ]]
+    "Activate Reservation1": {
+      "main": [
+        [
+          {
+            "node": "Send WebSocket Notification1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Partner Webhooks1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Prepare Partner Webhooks": {
-      "main": [[{"node": "Notify Partners", "type": "main", "index": 0}]]
+    "Prepare Partner Webhooks1": {
+      "main": [
+        [
+          {
+            "node": "Notify Partners1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Notify Partners": {
-      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    "Notify Partners1": {
+      "main": [
+        [
+          {
+            "node": "Respond1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Confirmation Email": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
-  "settings": {},
-  "id": "payment-handler-unifit"
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "3b196fa0-0540-4adf-be10-7b6bad72cedc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bef84eb9a4ad09879d169322fb77fc490a8e74cba72c40a383868b097d8d1511"
+  },
+  "id": "IkT0uz6hLpwsCxgTZiWYS",
+  "tags": []
 }
