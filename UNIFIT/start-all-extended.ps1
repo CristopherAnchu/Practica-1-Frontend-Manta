@@ -71,9 +71,9 @@ Start-LocalService -Name "AI Orchestrator (Pilar 3)" `
               -Port 3003
 
 # PILAR 4: n8n (Puerto 5678)
-Write-Host "Iniciando n8n (Pilar 4) en puerto 5678..." -ForegroundColor Yellow
+Write-Host "Iniciando n8n (Pilar 4) [DOCKER] en puerto 5678..." -ForegroundColor Yellow
 if (-not (Test-Port 5678)) {
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", "npx n8n; Write-Host 'n8n finalizado' -ForegroundColor Red"
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", "docker-compose up n8n; Write-Host 'n8n finalizado' -ForegroundColor Red"
     Start-Sleep -Seconds 2
 }
 else {

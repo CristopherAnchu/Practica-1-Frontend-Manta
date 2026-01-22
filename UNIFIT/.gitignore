@@ -49,3 +49,5 @@ Thumbs.db
 
 # NestJS
 .nest/
+
+__pycache__/
