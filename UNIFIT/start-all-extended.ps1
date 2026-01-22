@@ -103,7 +103,7 @@ Start-LocalService -Name "GraphQL API (NestJS)" `
 # WebSocket Server Python (Puerto 8080)
 Start-LocalService -Name "WebSocket Server (Python)" `
               -Path "$BASE_PATH\websocket-server" `
-              -Command "$env:PORT=8080; python main.py" `
+              -Command "`$env:PORT=8080; python main.py" `
               -Port 8080
 
 Start-Sleep -Seconds 5
