@@ -2,21 +2,15 @@
   "name": "Scheduled Tasks Workflow",
   "nodes": [
     {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "hours",
-              "hoursInterval": 24
-            }
-          ]
-        }
-      },
-      "id": "daily-trigger",
+      "parameters": {},
+      "id": "8c4a6d1d-567a-43de-9184-caeeb1cdc26c",
       "name": "Daily Trigger (8am)",
       "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
-      "position": [250, 300]
+      "position": [
+        2112,
+        1136
+      ]
     },
     {
       "parameters": {
@@ -27,229 +21,250 @@
         "jsonBody": "{\"query\": \"query { reservas { id, estado } }\"}",
         "options": {}
       },
-      "id": "generate-report",
+      "id": "87169d6c-04ac-425e-b81b-ae330b4e899b",
       "name": "Generate Daily Report",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [450, 300]
+      "position": [
+        2320,
+        1136
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// Simulating Email Sending\nconst subject = \"Reporte Diario UNIFIT - \" + new Date().toLocaleDateString();\n// Safety check for data structure\nconst reservas = $input.item.json.data ? $input.item.json.data.reservas : [];\nconst message = \"Total Reservas encontradas: \" + reservas.length;\n\nconsole.log(\"--- MOCK EMAIL ---\");\nconsole.log(\"Subject:\", subject);\nconsole.log(\"Message:\", message);\nconsole.log(\"------------------\");\n\nreturn { sent: true, subject, message };"
+        "jsCode": "try {\n  // Fecha y hora\n  const now = new Date();\n  const fecha = now.toLocaleDateString('es-EC');\n  const hora = now.toLocaleTimeString('es-EC');\n\n  // Seguridad en estructura de datos\n  const reservas = $input.item.json?.data?.reservas ?? [];\n  const totalReservas = reservas.length;\n\n  // Construcción del asunto\n  const subject = `📊 Reporte Diario UNIFIT – ${fecha}`;\n\n  // Construcción del mensaje\n  const message = `\nEstimado equipo UNIFIT,\n\nEste correo corresponde al **reporte diario automático de reservas**, generado por el sistema de monitoreo institucional.\n\n📌 **Resumen ejecutivo**\nDurante la fecha ${fecha}, el sistema registró un total de **${totalReservas} reservas** procesadas correctamente.\n\n📈 **Detalle del reporte**\n- Total de reservas registradas: ${totalReservas}\n- Estado del procesamiento: COMPLETADO\n- Fuente de datos: Sistema UNIFIT\n- Fecha del reporte: ${fecha}\n- Hora de generación: ${hora}\n\n🧠 **Interpretación**\n${\n  totalReservas === 0\n    ? 'No se registraron reservas en el período evaluado. Se recomienda verificar la disponibilidad de servicios o la actividad de usuarios.'\n    : 'El volumen de reservas indica una operación normal del sistema.'\n}\n\n🛠 **Acciones recomendadas**\n- Validar que las reservas se reflejen correctamente en los módulos administrativos.\n- Revisar métricas históricas para análisis de demanda.\n- No se requiere intervención técnica si los valores coinciden con lo esperado.\n\nℹ️ **Nota**\nEste mensaje fue generado automáticamente por la plataforma UNIFIT mediante n8n.\nPor favor, no responder a este correo.\n\n—\nSistema de Reportes Automáticos  \nPlataforma UNIFIT\n  `.trim();\n\n  // Log interno (simulación)\n  console.log('--- MOCK EMAIL ---');\n  console.log('Subject:', subject);\n  console.log('Message:', message);\n  console.log('------------------');\n\n  // Retorno para nodo Gmail\n  return {\n    sent: true,\n    subject,\n    message,\n    totalReservas,\n    timestamp: now.toISOString()\n  };\n\n} catch (error) {\n  return {\n    sent: false,\n    subject: '❌ Error en Reporte Diario UNIFIT',\n    message: `\nSe produjo un error durante la generación del reporte diario de reservas.\n\nDetalle del error:\n${error.message}\n\nFecha y hora:\n${new Date().toISOString()}\n\nSistema UNIFIT\n    `.trim()\n  };\n}\n"
       },
-      "id": "send-email-report",
+      "id": "49feab1c-9f3a-444c-a9b2-1b752f4f0bf5",
       "name": "Log Email Report",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
-      "position": [650, 300]
+      "position": [
+        2512,
+        1136
+      ]
     },
     {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "days",
-              "daysInterval": 7
-            }
-          ]
-        }
-      },
-      "id": "weekly-trigger",
-      "name": "Weekly Cleanup Trigger",
-      "type": "n8n-nodes-base.cron",
-      "typeVersion": 1,
-      "position": [250, 500]
-    },
-    {
-      "parameters": {
-        "method": "DELETE",
-        "url": "http://host.docker.internal:3000/cleanup/old-reservations",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "olderThan",
-              "value": "30"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "cleanup-old-data",
-      "name": "Cleanup Old Reservations",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [450, 500]
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "hours",
-              "hoursInterval": 1
-            }
-          ]
-        }
-      },
-      "id": "hourly-trigger",
-      "name": "Hourly Reminders Trigger",
-      "type": "n8n-nodes-base.cron",
-      "typeVersion": 1,
-      "position": [250, 700]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "http://host.docker.internal:3000/reservas/upcoming",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "hours",
-              "value": "2"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "get-upcoming-reservations",
-      "name": "Get Upcoming Reservations",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [450, 700]
-    },
-    {
-      "parameters": {
-        "batching": {
-          "batch": {
-            "batchSize": 10,
-            "batchInterval": 1000
-          }
-        }
-      },
-      "id": "loop-reservations",
-      "name": "Loop Reservations",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [650, 700]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:8080/api/notify",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"type\": \"reservation-reminder\",\n  \"data\": {\n    \"userId\": \"{{$json.userId}}\",\n    \"reservationId\": \"{{$json.id}}\",\n    \"message\": \"Tu reserva comienza en 2 horas\"\n  }\n}",
-        "options": {}
-      },
-      "id": "send-reminder",
-      "name": "Send Reminder",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [850, 700]
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 5
-            }
-          ]
-        }
-      },
-      "id": "health-check-trigger",
+      "parameters": {},
+      "id": "f2efaf67-d120-48c6-9642-4946594527b4",
       "name": "Health Check Trigger",
       "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
-      "position": [250, 900]
+      "position": [
+        2112,
+        1328
+      ]
     },
     {
       "parameters": {
-        "method": "GET",
         "url": "http://host.docker.internal:3000/health",
         "options": {
           "timeout": 5000
         }
       },
-      "id": "check-rest-api",
+      "id": "21947f84-2004-4d45-b8b4-3b61139a3e81",
       "name": "Check REST API",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [450, 900]
+      "position": [
+        2320,
+        1328
+      ]
     },
     {
       "parameters": {
-        "method": "GET",
         "url": "http://host.docker.internal:4000/health",
         "options": {
           "timeout": 5000
         }
       },
-      "id": "check-graphql",
+      "id": "4846fa8d-1368-4274-aeee-a70f9ce20e1f",
       "name": "Check GraphQL",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [650, 900]
+      "position": [
+        2512,
+        1328
+      ]
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "http://host.docker.internal:3003/health",
+        "url": "http://host.docker.internal:4000/health",
         "options": {
           "timeout": 5000
         }
       },
-      "id": "check-ai",
+      "id": "9f20a783-ac08-4ca3-b148-2057792bdbd5",
       "name": "Check AI Service",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [850, 900]
+      "position": [
+        2720,
+        1328
+      ]
     },
     {
       "parameters": {
-        "jsCode": "try {\n  // Access outputs from previous nodes\n  // Note: Using efficient selector syntax available in Code node\n  const rest = $('Check REST API').first().json;\n  const graphql = $('Check GraphQL').first().json;\n  const ai = $('Check AI Service').first().json;\n\n  const services = [\n    { name: 'REST API', status: rest.status || 'error' },\n    { name: 'GraphQL', status: graphql.status || 'error' },\n    { name: 'AI Service', status: ai.status || 'error' }\n  ];\n\n  const failed = services.filter(s => s.status !== 'ok');\n\n  if (failed.length > 0) {\n    return {\n      alert: true,\n      message: 'Servicios caídos: ' + failed.map(s => s.name).join(', '),\n      timestamp: new Date().toISOString()\n    };\n  }\n\n  return {\n    alert: false,\n    message: 'All services healthy',\n    timestamp: new Date().toISOString()\n  };\n} catch (e) {\n  return { alert: true, message: 'Health check failed to execute: ' + e.message };\n}"
+        "jsCode": "try {\n  // Obtener resultados de los nodos previos\n  const rest = $('Check REST API').first().json;\n  const graphql = $('Check GraphQL').first().json;\n  const ai = $('Check AI Service').first().json;\n\n  const services = [\n    { name: 'REST API', status: rest.status || 'error', detail: rest.detail || '' },\n    { name: 'GraphQL', status: graphql.status || 'error', detail: graphql.detail || '' },\n    { name: 'AI Service', status: ai.status || 'error', detail: ai.detail || '' }\n  ];\n\n  const failed = services.filter(s => s.status !== 'ok');\n  const timestamp = new Date().toISOString();\n\n  // 🟢 Caso: todos los servicios operativos\n  if (failed.length === 0) {\n    return {\n      alert: false,\n      subject: '✅ Health Check OK – Todos los servicios operativos',\n      message: `\nHola equipo,\n\nEste es un informe automático del sistema de monitoreo.\n\n✅ Todos los servicios evaluados se encuentran funcionando correctamente al momento de la verificación.\n\nResumen del estado:\n- REST API: OK\n- GraphQL: OK\n- AI Service: OK\n\nNo se requiere ninguna acción en este momento.\n\nFecha y hora del chequeo:\n${timestamp}\n\nSaludos,\nSistema de Monitoreo Automático\n      `.trim(),\n      timestamp\n    };\n  }\n\n  // 🔴 Caso: uno o más servicios caídos\n  const failedDetails = failed.map(s => {\n    return `- ${s.name}\n  Estado: ${s.status.toUpperCase()}\n  Detalle: ${s.detail || 'No se proporcionó información adicional.'}`;\n  }).join('\\n\\n');\n\n  return {\n    alert: true,\n    subject: '🚨 ALERTA CRÍTICA – Fallo en servicios del sistema',\n    message: `\n⚠️ ALERTA AUTOMÁTICA DEL SISTEMA ⚠️\n\nSe ha detectado un fallo en uno o más servicios críticos durante el último health check.\n\nServicios afectados:\n${failedDetails}\n\nImpacto potencial:\n- Interrupción parcial o total de funcionalidades del sistema\n- Posibles errores para usuarios finales\n- Degradación del rendimiento general\n\nAcciones recomendadas:\n1. Verificar el estado del servicio afectado.\n2. Revisar logs del servidor correspondiente.\n3. Validar conectividad de red y certificados.\n4. Reiniciar el servicio si aplica.\n5. Escalar al equipo responsable si el problema persiste.\n\nFecha y hora de detección:\n${timestamp}\n\nEste mensaje fue generado automáticamente por n8n.\nNo responder a este correo.\n\n—  \nSistema de Monitoreo y Alertas\n      `.trim(),\n      timestamp\n    };\n\n} catch (e) {\n  return {\n    alert: true,\n    subject: '❌ ERROR EN HEALTH CHECK – Ejecución fallida',\n    message: `\nSe produjo un error durante la ejecución del health check automático.\n\nDetalle del error:\n${e.message}\n\nEste fallo impide confirmar el estado real de los servicios y debe ser revisado con prioridad.\n\nFecha y hora:\n${new Date().toISOString()}\n\nSistema de Monitoreo\n    `.trim()\n  };\n}\n"
       },
-      "id": "consolidate-health",
+      "id": "c46c5437-48fb-4b04-b070-858efcd2c4a6",
       "name": "Consolidate Health Status",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
-      "position": [1050, 900]
+      "position": [
+        2912,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "cristopheromg35@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2704,
+        1136
+      ],
+      "id": "4fa2f8e4-ebb8-438b-823e-b3f287e928e8",
+      "name": "Send a message",
+      "webhookId": "58fb0565-68b9-4500-9e71-be3df471596d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ENdSCeFVWb5mEgni",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "cristopheromg35@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3120,
+        1328
+      ],
+      "id": "d2338a3e-64f6-4e73-abcc-24fc02b14bd5",
+      "name": "Send a message1",
+      "webhookId": "de8cc71b-7ccb-4d5a-ace4-ec85f318c052",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ENdSCeFVWb5mEgni",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
+  "pinData": {},
   "connections": {
     "Daily Trigger (8am)": {
-      "main": [[{ "node": "Generate Daily Report", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Generate Daily Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Generate Daily Report": {
-      "main": [[{ "node": "Log Email Report", "type": "main", "index": 0 }]]
-    },
-    "Weekly Cleanup Trigger": {
-      "main": [[{ "node": "Cleanup Old Reservations", "type": "main", "index": 0 }]]
-    },
-    "Hourly Reminders Trigger": {
-      "main": [[{ "node": "Get Upcoming Reservations", "type": "main", "index": 0 }]]
-    },
-    "Get Upcoming Reservations": {
-      "main": [[{ "node": "Loop Reservations", "type": "main", "index": 0 }]]
-    },
-    "Loop Reservations": {
-      "main": [[{ "node": "Send Reminder", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Log Email Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Health Check Trigger": {
-      "main": [[{ "node": "Check REST API", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Check REST API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Check REST API": {
-      "main": [[{ "node": "Check GraphQL", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Check GraphQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Check GraphQL": {
-      "main": [[{ "node": "Check AI Service", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Check AI Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Check AI Service": {
-      "main": [[{ "node": "Consolidate Health Status", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Consolidate Health Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Email Report": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Health Status": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "pinData": {}
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "4a1ef978-82b3-4219-bd9a-c1c976b1e1f0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bef84eb9a4ad09879d169322fb77fc490a8e74cba72c40a383868b097d8d1511"
+  },
+  "id": "QPLAcNDgYqIth6UHHpf0P",
+  "tags": []
 }
