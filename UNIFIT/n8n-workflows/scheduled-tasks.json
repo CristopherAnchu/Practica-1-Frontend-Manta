@@ -20,17 +20,11 @@
     },
     {
       "parameters": {
-        "method": "GET",
+        "method": "POST",
         "url": "http://host.docker.internal:4000/graphql",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "query",
-              "value": "query { reporteReservas { total, activas, completadas, canceladas } }"
-            }
-          ]
-        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"query\": \"query { reservas { id, estado } }\"}",
         "options": {}
       },
       "id": "generate-report",
@@ -45,7 +39,7 @@
         "fromEmail": "noreply@unifit.com",
         "toEmail": "admin@unifit.com",
         "subject": "=Reporte Diario UNIFIT - {{$now.format('DD/MM/YYYY')}}",
-        "message": "=Estadísticas del día:\\n\\nTotal Reservas: {{$json.data.reporteReservas.total}}\\nActivas: {{$json.data.reporteReservas.activas}}\\nCompletadas: {{$json.data.reporteReservas.completadas}}\\nCanceladas: {{$json.data.reporteReservas.canceladas}}",
+        "message": "=Total Reservas encontradas: {{$json.data.reservas.length}}",
         "options": {}
       },
       "id": "send-email-report",
