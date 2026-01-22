@@ -18,8 +18,30 @@ interface ChatMessage {
   template: `
     <div class="chat-container">
       <div class="chat-header">
-        <h2>🤖 Asistente UNIFIT AI</h2>
-        <p class="subtitle">Powered by MCP (Model Context Protocol)</p>
+        <div class="header-left">
+          <h2>🤖 Asistente UNIFIT AI</h2>
+          <p class="subtitle">Powered by MCP (Model Context Protocol)</p>
+        </div>
+        <div class="header-right">
+          <button class="btn-settings" (click)="showSettings = !showSettings">⚙️</button>
+        </div>
+      </div>
+
+      <div *ngIf="showSettings" class="settings-panel">
+        <label>Proveedor LLM:
+          <select [(ngModel)]="llmProvider">
+            <option value="mock">mock</option>
+            <option value="openai">openai</option>
+            <option value="gemini">gemini</option>
+          </select>
+        </label>
+        <label>API Key:
+          <input type="text" [(ngModel)]="llmApiKey" placeholder="Pega tu API key aquí" />
+        </label>
+        <div class="settings-actions">
+          <button (click)="saveSettings()" class="btn-save">Guardar</button>
+          <button (click)="resetSettings()" class="btn-reset">Reset</button>
+        </div>
       </div>
 
       <div class="chat-messages" #messagesContainer>
@@ -119,7 +141,33 @@ interface ChatMessage {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 20px;
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left {
+      flex: 1;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-settings {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 20px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-settings:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
 
     .chat-header h2 {
@@ -131,6 +179,65 @@ interface ChatMessage {
       margin: 0;
       opacity: 0.9;
       font-size: 14px;
+    }
+
+    .settings-panel {
+      background: #f9f9f9;
+      padding: 16px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .settings-panel label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .settings-panel select,
+    .settings-panel input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .settings-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn-save,
+    .btn-reset {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .btn-save {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-save:hover {
+      background: #5568d3;
+    }
+
+    .btn-reset {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    .btn-reset:hover {
+      background: #d0d0d0;
     }
 
     .chat-messages {
@@ -325,6 +432,9 @@ export class ChatComponent implements OnInit {
   ];
 
   private aiApiUrl = `${environment.aiOrchestratorUrl}/chat`;
+  showSettings = false;
+  llmProvider: string = environment.ai?.provider || 'mock';
+  llmApiKey: string = '';
 
   constructor(private http: HttpClient) {}
 
@@ -334,6 +444,11 @@ export class ChatComponent implements OnInit {
       content: '¡Hola! Soy el asistente de UNIFIT. Puedo ayudarte con tus reservas, crear rutinas personalizadas, y mostrarte estadísticas. ¿En qué puedo ayudarte?',
       timestamp: new Date()
     });
+    // Cargar settings guardados
+    const storedProvider = localStorage.getItem('ai.llmProvider');
+    const storedKey = localStorage.getItem('ai.llmApiKey');
+    if (storedProvider) this.llmProvider = storedProvider;
+    if (storedKey) this.llmApiKey = storedKey;
   }
 
   async sendMessage(): Promise<void> {
@@ -365,10 +480,15 @@ export class ChatComponent implements OnInit {
         this.selectedFile = null;
       } else {
         // Enviar solo texto
-        response = await this.http.post(this.aiApiUrl, {
+        const payload: any = {
           message: userMessage,
-          userId: this.getUserId()
-        }).toPromise();
+          userId: this.getUserId(),
+          // Pasamos provider y apiKey para que el orquestador pueda usarlos si está preparado
+          provider: this.llmProvider || environment.ai?.provider,
+          apiKey: this.llmApiKey || environment.ai?.apiKey
+        };
+
+        response = await this.http.post(this.aiApiUrl, payload).toPromise();
       }
 
       this.messages.push({
@@ -419,5 +539,19 @@ export class ChatComponent implements OnInit {
     // Obtener del localStorage o AuthService
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     return user.id || 'guest';
+  }
+
+  saveSettings(): void {
+    localStorage.setItem('ai.llmProvider', this.llmProvider);
+    localStorage.setItem('ai.llmApiKey', this.llmApiKey);
+    this.showSettings = false;
+  }
+
+  resetSettings(): void {
+    localStorage.removeItem('ai.llmProvider');
+    localStorage.removeItem('ai.llmApiKey');
+    this.llmProvider = environment.ai?.provider || 'mock';
+    this.llmApiKey = environment.ai?.apiKey || '';
+    this.showSettings = false;
   }
 }
