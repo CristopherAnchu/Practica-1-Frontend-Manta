@@ -8,19 +8,19 @@ $root = Get-Location
 function Install-Npm {
     param([string]$path)
     if (Test-Path $path) {
-        Write-Host "`n📁 Procesando $path..." -ForegroundColor Yellow
+        Write-Host "`nProcesando $path..." -ForegroundColor Yellow
         Push-Location $path
         if (Test-Path "package.json") {
             Write-Host "   Instalando paquetes npm..."
             npm install
-            if ($LASTEXITCODE -ne 0) { Write-Host "   ❌ Error instalando dependencias en $path" -ForegroundColor Red }
-            else { Write-Host "   ✅ Dependencias instaladas." -ForegroundColor Green }
+            if ($LASTEXITCODE -ne 0) { Write-Host "   Error instalando dependencias en $path" -ForegroundColor Red }
+            else { Write-Host "   Dependencias instaladas." -ForegroundColor Green }
         } else {
-            Write-Host "   ⚠️ No se encontró package.json en $path" -ForegroundColor DarkGray
+            Write-Host "   No se encontro package.json en $path" -ForegroundColor DarkGray
         }
         Pop-Location
     } else {
-        Write-Host "`n⚠️ Carpeta '$path' no encontrada." -ForegroundColor Red
+        Write-Host "`nCarpeta '$path' no encontrada." -ForegroundColor Red
     }
 }
 
@@ -28,26 +28,26 @@ function Install-Npm {
 function Install-Python {
     param([string]$path)
     if (Test-Path $path) {
-        Write-Host "`n📁 Procesando $path..." -ForegroundColor Yellow
+        Write-Host "`nProcesando $path..." -ForegroundColor Yellow
         Push-Location $path
         if (Test-Path "requirements.txt") {
             Write-Host "   Instalando requerimientos Python..."
             pip install -r requirements.txt
-            if ($LASTEXITCODE -ne 0) { Write-Host "   ❌ Error instalando requerimientos en $path" -ForegroundColor Red }
-            else { Write-Host "   ✅ Requerimientos instalados." -ForegroundColor Green }
+            if ($LASTEXITCODE -ne 0) { Write-Host "   Error instalando requerimientos en $path" -ForegroundColor Red }
+            else { Write-Host "   Requerimientos instalados." -ForegroundColor Green }
         } else {
-            Write-Host "   ⚠️ No se encontró requirements.txt en $path" -ForegroundColor DarkGray
+            Write-Host "   No se encontro requirements.txt en $path" -ForegroundColor DarkGray
         }
         Pop-Location
     } else {
-        Write-Host "`n⚠️ Carpeta '$path' no encontrada." -ForegroundColor Red
+        Write-Host "`nCarpeta '$path' no encontrada." -ForegroundColor Red
     }
 }
 
 # 1. Root (para scripts compartidos si los hay)
-Write-Host "`n[1/8] Verificando dependencias en raíz..." -ForegroundColor Cyan
+Write-Host "`n[1/8] Verificando dependencias en raiz..." -ForegroundColor Cyan
 if (Test-Path "package.json") {
-    Write-Host "   Instalando dependencias raíz..."
+    Write-Host "   Instalando dependencias raiz..."
     npm install
 }
 
@@ -66,17 +66,17 @@ Install-Python "ai-orchestrator"
 # 4. Servicios Go
 Write-Host "`n--- Servicios Go ---" -ForegroundColor Cyan
 if (Test-Path "RestGolang") {
-    Write-Host "`n📁 Procesando RestGolang..." -ForegroundColor Yellow
+    Write-Host "`nProcesando RestGolang..." -ForegroundColor Yellow
     Push-Location "RestGolang"
     Write-Host "   Ejecutando go mod download..."
     go mod download
-    if ($LASTEXITCODE -ne 0) { Write-Host "   ❌ Error en go mod download" -ForegroundColor Red }
-    else { Write-Host "   ✅ Módulos Go descargados." -ForegroundColor Green }
+    if ($LASTEXITCODE -ne 0) { Write-Host "   Error en go mod download" -ForegroundColor Red }
+    else { Write-Host "   Modulos Go descargados." -ForegroundColor Green }
     Pop-Location
 } else {
-    Write-Host "`n⚠️ Carpeta 'RestGolang' no encontrada." -ForegroundColor Red
+    Write-Host "`nCarpeta 'RestGolang' no encontrada." -ForegroundColor Red
 }
 
 Write-Host "`n=================================================" -ForegroundColor Green
-Write-Host "Proceso de instalación finalizado." -ForegroundColor Green
+Write-Host "Proceso de instalacion finalizado." -ForegroundColor Green
 Write-Host "=================================================" -ForegroundColor Green
