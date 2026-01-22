@@ -1,10 +1,11 @@
 import { IsString, IsUrl, IsArray, ArrayMinSize } from 'class-validator';
+import { IsUUID, IsOptional } from 'class-validator';
 
 export class RegisterPartnerDto {
   @IsString()
   name: string;
 
-  @IsUrl()
+  @IsUrl({}, { message: 'webhookUrl must be a valid URL' })
   webhookUrl: string;
 
   @IsArray()
@@ -20,6 +21,17 @@ export class VerifyWebhookDto {
 
   @IsString()
   signature: string;
+}
+
+export class EmitPartnerEventDto {
+  @IsUUID()
+  partnerId: string;
+
+  @IsString()
+  eventType: string;
+
+  @IsOptional()
+  data?: Record<string, any>;
 }
 
 export interface PartnerWebhookEvent {
