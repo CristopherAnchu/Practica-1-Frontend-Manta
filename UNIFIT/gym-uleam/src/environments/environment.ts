@@ -15,6 +15,13 @@ export const environment = {
   authServiceUrl: 'http://localhost:3001/auth',
   paymentServiceUrl: 'http://localhost:3002',
   aiOrchestratorUrl: 'http://localhost:3003',
+    // AI / LLM provider config - coloca aquí la URL o clave cuando quieras cambiar de proveedor
+  // Ej.: provider: 'mock' | 'openai' | 'gemini', apiKey: 'tu_api_key'
+  ai: {
+    provider: 'gemini',
+    apiKey: 'AIzaSyAtTjt7Ql8z1bg3r-EvleHmkeFC3Ev0yEw'
+  },
+
   
   // Configuración de servicios
   endpoints: {
