@@ -97,11 +97,30 @@ export class PartnerService {
    * Verifica la firma HMAC de un webhook recibido
    */
   verifyHmacSignature(payload: any, signature: string, secret: string): boolean {
-    const expectedSignature = this.generateHmacSignature(payload, secret);
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    );
+    try {
+      const expectedSignature = this.generateHmacSignature(payload, secret);
+      
+      // Asegurar que ambas firmas sean strings válidos
+      if (!signature || typeof signature !== 'string' || !expectedSignature) {
+        return false;
+      }
+
+      // Si la firma entrante está en base64, convertirla a hex
+      let normalizedSignature = signature;
+      try {
+        // Intentar decodificar si es base64
+        const decodedBuffer = Buffer.from(signature, 'base64');
+        normalizedSignature = decodedBuffer.toString('hex');
+      } catch {
+        // Si no es base64 válido, usar como está (asumiendo que es hex)
+      }
+
+      // Comparar usando strings en lugar de buffers para evitar problemas de longitud
+      return normalizedSignature.toLowerCase() === expectedSignature.toLowerCase();
+    } catch (error) {
+      console.error('Error verificando HMAC signature:', error);
+      return false;
+    }
   }
 
   /**
