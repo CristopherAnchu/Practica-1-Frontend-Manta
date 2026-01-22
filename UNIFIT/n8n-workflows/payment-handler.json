@@ -24,32 +24,14 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:3002/payments/{{$json.paymentId}}/confirm",
         "method": "POST",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "status",
-              "value": "={{$json.status}}"
-            }
-          ]
-        }
-      },
-      "name": "Update Payment Status",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [650, 300]
-    },
-    {
-      "parameters": {
         "url": "http://host.docker.internal:3000/reservas/{{$json.metadata.reservationId}}/activate",
-        "method": "POST"
+        "options": {}
       },
       "name": "Activate Reservation",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [850, 300]
+      "typeVersion": 4.1,
+      "position": [650, 300]
     },
     {
       "parameters": {
@@ -67,19 +49,16 @@
     },
     {
       "parameters": {
-        "fromEmail": "noreply@unifit.com",
-        "toEmail": "={{$json.metadata.userEmail}}",
-        "subject": "Pago Confirmado - UNIFIT",
-        "text": "Tu pago de {{$json.amount/100}} {{$json.currency}} ha sido confirmado.\\n\\nID de Pago: {{$json.paymentId}}\\n\\nGracias por tu preferencia."
+        "jsCode": "// Simulating Email Sending\nconst email = $input.item.json.metadata ? $input.item.json.metadata.userEmail : 'unknown@example.com';\nconst subject = \"Pago Confirmado - UNIFIT\";\nconst amount = $input.item.json.amount / 100;\nconst currency = $input.item.json.currency;\n\nconsole.log(\"--- MOCK PAYMENT EMAIL ---\");\nconsole.log(\"To:\", email);\nconsole.log(\"Subject:\", subject);\nconsole.log(\"Amount:\", amount, currency);\nconsole.log(\"--------------------------\");\n\nreturn { sent: true, to: email, subject };"
       },
-      "name": "Send Confirmation Email",
-      "type": "n8n-nodes-base.emailSend",
+      "name": "Log Confirmation Email",
+      "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [1050, 400]
     },
     {
       "parameters": {
-        "functionCode": "// Obtener lista de partners\nconst partners = [\n  {\n    id: 'partner_1',\n    name: 'Tours Paradise',\n    webhookUrl: 'http://partner1.com/webhooks',\n    hmacSecret: 'secret_123'\n  }\n];\n\nconst event = {\n  eventType: 'payment.succeeded',\n  timestamp: new Date().toISOString(),\n  data: items[0].json\n};\n\n// Generar firma HMAC\nconst crypto = require('crypto');\nconst outputs = [];\n\nfor (const partner of partners) {\n  const signature = crypto\n    .createHmac('sha256', partner.hmacSecret)\n    .update(JSON.stringify(event))\n    .digest('hex');\n  \n  outputs.push({\n    json: {\n      partnerUrl: partner.webhookUrl,\n      signature: signature,\n      event: event\n    }\n  });\n}\n\nreturn outputs;"
+        "functionCode": "// Obtener lista de partners\nconst partners = [\n  {\n    id: 'partner_1',\n    name: 'Tours Paradise',\n    webhookUrl: 'http://host.docker.internal:3002/partners/webhook',\n    hmacSecret: 'secret_123'\n  }\n];\n\nconst event = {\n  eventType: 'payment.succeeded',\n  timestamp: new Date().toISOString(),\n  data: items[0].json\n};\n\n// Generar firma HMAC\nconst crypto = require('crypto');\nconst outputs = [];\n\nfor (const partner of partners) {\n  const signature = crypto\n    .createHmac('sha256', partner.hmacSecret)\n    .update(JSON.stringify(event))\n    .digest('hex');\n  \n  outputs.push({\n    json: {\n      partnerUrl: partner.webhookUrl,\n      signature: signature,\n      event: event\n    }\n  });\n}\n\nreturn outputs;"
       },
       "name": "Prepare Partner Webhooks",
       "type": "n8n-nodes-base.function",
@@ -88,8 +67,8 @@
     },
     {
       "parameters": {
-        "url": "={{$json.partnerUrl}}",
         "method": "POST",
+        "url": "={{$json.partnerUrl}}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -104,14 +83,13 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": []
-        },
-        "jsonBody": "={{JSON.stringify($json.event)}}"
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify($json.event)}}",
+        "options": {}
       },
       "name": "Notify Partners",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
+      "typeVersion": 4.1,
       "position": [1450, 300]
     },
     {
@@ -130,15 +108,12 @@
       "main": [[{"node": "Validate & Normalize", "type": "main", "index": 0}]]
     },
     "Validate & Normalize": {
-      "main": [[{"node": "Update Payment Status", "type": "main", "index": 0}]]
-    },
-    "Update Payment Status": {
       "main": [[{"node": "Activate Reservation", "type": "main", "index": 0}]]
     },
     "Activate Reservation": {
       "main": [[
         {"node": "Send WebSocket Notification", "type": "main", "index": 0},
-        {"node": "Send Confirmation Email", "type": "main", "index": 0},
+        {"node": "Log Confirmation Email", "type": "main", "index": 0},
         {"node": "Prepare Partner Webhooks", "type": "main", "index": 0}
       ]]
     },
