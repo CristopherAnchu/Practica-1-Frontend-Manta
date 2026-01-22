@@ -1,18 +1,26 @@
 {
-  "name": "MCP Input Handler - Simple",
+  "name": "MCP Input Handler - Telegram",
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "mcp-input",
-        "responseMode": "responseNode",
-        "options": {}
+        "updates": [
+          "message"
+        ]
       },
-      "name": "Webhook Input",
-      "type": "n8n-nodes-base.webhook",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1,
-      "position": [250, 300],
-      "id": "webhook-input"
+      "position": [
+        250,
+        300
+      ],
+      "id": "telegram-trigger",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
@@ -20,34 +28,63 @@
         "url": "http://host.docker.internal:3003/chat",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"message\": \"{{$json.body.message}}\",\n  \"userId\": \"{{$json.body.userId}}\"\n}",
+        "jsonBody": "={\n  \"message\": \"{{$json.message.text}}\",\n  \"userId\": \"{{$json.message.chat.id}}\"\n}",
         "options": {}
       },
       "name": "AI Orchestrator",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [450, 300],
+      "position": [
+        450,
+        300
+      ],
       "id": "ai-orchestrator"
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{JSON.stringify($json)}}",
-        "options": {}
+        "operation": "sendMessage",
+        "chatId": "={{$node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"]}}",
+        "text": "={{$json.response}}",
+        "additionalFields": {}
       },
-      "name": "Respond Output",
-      "type": "n8n-nodes-base.respondToWebhook",
+      "name": "Respond to Telegram",
+      "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
-      "position": [650, 300],
-      "id": "respond-output"
+      "position": [
+        650,
+        300
+      ],
+      "id": "telegram-response",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
     }
   ],
   "connections": {
-    "Webhook Input": {
-      "main": [[{"node": "AI Orchestrator", "type": "main", "index": 0}]]
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "AI Orchestrator": {
-      "main": [[{"node": "Respond Output", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Respond to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   }
 }
