@@ -85,7 +85,26 @@ if (Test-Path $websocketPath) {
 Start-Sleep -Seconds 2
 
 # ======================================================
-# 4. Frontend (Angular) - Puerto 4200
+# 4. Webhook Service (NodeJS) - Puerto 3005
+# ======================================================
+Write-Host 'Iniciando Webhook Service (NodeJS)...' -ForegroundColor Magenta
+$webhookPath = Join-Path $rootPath 'webhook-service'
+
+if (Test-Path $webhookPath) {
+    Start-Process powershell -ArgumentList @(
+        '-NoExit',
+        '-Command',
+        "cd '$webhookPath'; Write-Host 'Webhook Service (NodeJS) - Puerto 3005' -ForegroundColor Green; npm start"
+    )
+    Write-Host '   Terminal Webhook Service abierta' -ForegroundColor Green
+} else {
+    Write-Host '   No se encontro la carpeta webhook-service' -ForegroundColor Red
+}
+
+Start-Sleep -Seconds 2
+
+# ======================================================
+# 5. Frontend (Angular) - Puerto 4200
 # ======================================================
 Write-Host 'Iniciando Frontend (Angular)...' -ForegroundColor Red
 $frontendPath = Join-Path $rootPath 'gym-uleam'
@@ -113,6 +132,7 @@ Write-Host 'URLs de los servicios:' -ForegroundColor Yellow
 Write-Host '   REST API (Golang):      http://localhost:3000' -ForegroundColor Cyan
 Write-Host '   GraphQL API (NestJS):   http://localhost:4000/graphql' -ForegroundColor Cyan
 Write-Host '   WebSocket Server:       http://localhost:8080' -ForegroundColor Cyan
+Write-Host '   Webhook Service:        http://localhost:3005' -ForegroundColor Cyan
 Write-Host '   Frontend (Angular):     http://localhost:4200' -ForegroundColor Cyan
 Write-Host ''
 Write-Host 'Espera aproximadamente 30-60 segundos para que todos los servicios esten listos' -ForegroundColor Yellow
@@ -121,6 +141,7 @@ Write-Host 'Verificaciones:' -ForegroundColor Yellow
 Write-Host '   REST API Health:     http://localhost:3000' -ForegroundColor White
 Write-Host '   GraphQL Playground:  http://localhost:4000/graphql' -ForegroundColor White
 Write-Host '   WebSocket Health:    http://localhost:8080/health' -ForegroundColor White
+Write-Host '   Webhook Health:      http://localhost:3005/health' -ForegroundColor White
 Write-Host '   Frontend UI:         http://localhost:4200' -ForegroundColor White
 Write-Host ''
 Write-Host 'Presiona Ctrl+C en cada terminal para detener los servicios' -ForegroundColor Magenta

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,25 @@ import { CommonModule } from '@angular/common';
 export class Login {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private http = inject(HttpClient);
+
+  testWebhook() {
+    this.http.post('http://localhost:3005/webhook', { event: 'button_clicked', source: 'frontend_login_page' })
+      .subscribe({
+        next: (res) => {
+          console.log('Webhook success:', res);
+          Swal.fire({ 
+            icon: 'success', 
+            title: 'Webhook Enviado', 
+            text: 'El evento se envió correctamente. Revisa la terminal del microservicio webhook-service.' 
+          });
+        },
+        error: (err) => {
+          console.error('Webhook error:', err);
+          Swal.fire({ icon: 'error', title: 'Error Webhook', text: 'No se pudo enviar el evento. Asegúrate de que el servicio esté corriendo en el puerto 3005.' });
+        }
+      });
+  }
 
   async onSubmit(event: Event): Promise<void> {
     event.preventDefault();

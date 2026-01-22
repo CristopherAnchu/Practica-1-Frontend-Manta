@@ -56,6 +56,7 @@ Write-Host "`n--- Servicios Node.js/NestJS/Angular ---" -ForegroundColor Cyan
 Install-Npm "auth-service"
 Install-Npm "payment-service"
 Install-Npm "graphql"
+Install-Npm "webhook-service"
 Install-Npm "gym-uleam"
 
 # 3. Servicios Python

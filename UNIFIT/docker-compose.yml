@@ -157,6 +157,20 @@ services:
       - unifit-network
     restart: unless-stopped
 
+  # Webhook Service (NodeJS)
+  webhook-service:
+    build:
+      context: ./webhook-service
+      dockerfile: Dockerfile
+    container_name: unifit-webhook
+    ports:
+      - "3005:3005"
+    environment:
+      PORT: 3005
+    networks:
+      - unifit-network
+    restart: unless-stopped
+
   # n8n Event Bus
   n8n:
     image: n8nio/n8n:latest
