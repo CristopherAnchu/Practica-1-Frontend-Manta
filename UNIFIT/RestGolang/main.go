@@ -46,7 +46,7 @@ func main() {
 	// Check email availability (SIN PROTECCIÓN - needed for registration)
 	r.HandleFunc("/users/check-email", routes.CheckEmailAvailabilityHandler).Methods("GET")
 
-	// POST (Registro/Creación: SIN protección)
+	// POST (Registro/Creación: SIN protección)12
 	r.HandleFunc("/users", routes.PostUserHandler).Methods("POST")
 
 	// GET ALL (Protegido: Requiere Auth + Rol ADMINISTRADOR)
