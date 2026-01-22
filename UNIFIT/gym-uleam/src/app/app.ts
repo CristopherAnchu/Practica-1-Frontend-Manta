@@ -1,10 +1,12 @@
 import { Component, signal, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { WebsocketService } from './services/websocket.service';
+import { ChatLauncherComponent } from './chat-launcher.component';
+
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, ChatLauncherComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
