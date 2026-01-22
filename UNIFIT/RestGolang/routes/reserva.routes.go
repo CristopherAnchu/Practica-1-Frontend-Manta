@@ -431,27 +431,3 @@ func ActivateReservaHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(reserva)
 }
-
-// =============================
-//
-//	ACTIVATE RESERVA (Para n8n Webhook - Sin Auth requerida en este contexto)
-//
-// =============================
-func ActivateReservaHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	id := params["id"]
-
-	var reserva models.Reserva
-	if err := db.DB.First(&reserva, "id = ?", id).Error; err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Reserva not found"})
-		return
-	}
-
-	estado := "CONFIRMADA"
-	reserva.Estado = &estado
-	db.DB.Save(&reserva)
-
-	json.NewEncoder(w).Encode(reserva)
-}
