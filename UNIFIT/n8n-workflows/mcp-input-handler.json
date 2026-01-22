@@ -128,10 +128,10 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://websocket-server:8080/emit",
+        "url": "http://websocket-server:8080/api/notify",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"event\": \"ai-response\",\n  \"data\": {\n    \"userId\": \"{{$json.userId}}\",\n    \"response\": \"{{$json.response}}\",\n    \"actionsExecuted\": {{JSON.stringify($json.toolsExecuted)}}\n  }\n}",
+        "jsonBody": "={\n  \"type\": \"ai-response\",\n  \"data\": {\n    \"userId\": \"{{$json.userId}}\",\n    \"response\": \"{{$json.response}}\",\n    \"actionsExecuted\": {{JSON.stringify($json.toolsExecuted)}}\n  }\n}",
         "options": {}
       },
       "id": "notify-user-websocket",

@@ -148,10 +148,10 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://websocket-server:8080/emit",
+        "url": "http://websocket-server:8080/api/notify",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"event\": \"reservation-reminder\",\n  \"data\": {\n    \"userId\": \"{{$json.userId}}\",\n    \"reservationId\": \"{{$json.id}}\",\n    \"message\": \"Tu reserva comienza en 2 horas\"\n  }\n}",
+        "jsonBody": "={\n  \"type\": \"reservation-reminder\",\n  \"data\": {\n    \"userId\": \"{{$json.userId}}\",\n    \"reservationId\": \"{{$json.id}}\",\n    \"message\": \"Tu reserva comienza en 2 horas\"\n  }\n}",
         "options": {}
       },
       "id": "send-reminder",

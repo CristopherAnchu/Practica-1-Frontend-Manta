@@ -40,6 +40,13 @@ func main() {
 	// Endpoints de Autenticación y Usuarios
 	// ----------------------------------------------------
 
+	// Health Check
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}).Methods("GET")
+
 	// 🔥 RUTA DE LOGIN (SIN PROTECCIÓN) 🔥
 	r.HandleFunc("/login", routes.LoginHandler).Methods("POST")
 
@@ -60,6 +67,9 @@ func main() {
 
 	// UPDATE (Protegido: Solo Auth. Lógica de Admin/Owner DENTRO del handler)
 	r.HandleFunc("/users/{id}", middleware.AuthMiddleware(routes.UpdateUserByID)).Methods("PUT")
+
+	// Endpoint Especial para n8n (Activate)
+	r.HandleFunc("/reservas/{id}/activate", routes.ActivateReservaHandler).Methods("POST")
 
 	// Endpoints de Reservas (Requieren Autenticación)
 	// ----------------------------------------------------

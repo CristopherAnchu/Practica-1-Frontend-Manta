@@ -180,4 +180,12 @@ export class PaymentService {
       take: 100,
     });
   }
+
+  async updatePaymentStatus(paymentId: string, status: string): Promise<Payment> {
+    const payment = await this.paymentRepository.findOne({ where: { id: paymentId } });
+    if (!payment) throw new Error('Payment not found');
+    payment.status = status;
+    if (status === 'succeeded') payment.paidAt = new Date();
+    return this.paymentRepository.save(payment);
+  }
 }

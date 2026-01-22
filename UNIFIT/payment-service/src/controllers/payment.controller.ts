@@ -26,6 +26,11 @@ export class PaymentController {
     return this.paymentService.getAllPayments();
   }
 
+  @Post(':id/confirm')
+  async confirmPayment(@Param('id') id: string, @Body('status') status: string) {
+    return this.paymentService.updatePaymentStatus(id, status);
+  }
+
   @Post('webhook')
   async handleWebhook(
     @Req() req: RawBodyRequest<Request>,

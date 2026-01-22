@@ -53,14 +53,16 @@
     },
     {
       "parameters": {
-        "url": "http://websocket-server:8080",
-        "event": "payment_confirmed",
-        "sendData": true,
-        "dataToSend": "={{$json}}"
+        "method": "POST",
+        "url": "http://websocket-server:8080/api/notify",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"payment_confirmed\",\n  \"data\": {{JSON.stringify($json)}}\n}",
+        "options": {}
       },
       "name": "Send WebSocket Notification",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
+      "typeVersion": 4.1,
       "position": [1050, 200]
     },
     {
