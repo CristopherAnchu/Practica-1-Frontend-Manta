@@ -1,6 +1,7 @@
-import { Controller, Post, Get, Body, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Headers, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { PartnerService } from '../services/partner.service';
-import { RegisterPartnerDto } from '../dto/partner.dto';
+import { RegisterPartnerDto, EmitPartnerEventDto } from '../dto/partner.dto';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Controller('partners')
 export class PartnerController {
@@ -11,6 +12,7 @@ export class PartnerController {
    * Registra un nuevo partner para recibir webhooks
    */
   @Post('register')
+  @UseGuards(JwtAuthGuard)
   async registerPartner(@Body() dto: RegisterPartnerDto) {
     const partner = await this.partnerService.registerPartner(dto);
     
@@ -38,6 +40,7 @@ export class PartnerController {
    * Lista todos los partners registrados
    */
   @Get()
+  @UseGuards(JwtAuthGuard)
   async getAllPartners() {
     return this.partnerService.getAllPartners();
   }
@@ -65,9 +68,14 @@ export class PartnerController {
     // Verificar firma HMAC
     const isValid = this.partnerService.verifyHmacSignature(payload, signature, partner.hmacSecret);
 
+    const eventType = payload?.eventType || 'unknown';
+
     if (!isValid) {
+      await this.partnerService.logInboundWebhook(partner.id, eventType, payload, signature, false);
       throw new UnauthorizedException('Invalid HMAC signature');
     }
+
+    await this.partnerService.logInboundWebhook(partner.id, eventType, payload, signature, true);
 
     // Procesar webhook (aquí implementarías tu lógica de negocio)
     console.log(`✅ Webhook recibido de partner ${partner.name}:`, payload);
@@ -76,6 +84,26 @@ export class PartnerController {
       received: true,
       message: 'Webhook procesado exitosamente',
       timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * POST /partners/emit
+   * Envía un evento de prueba hacia un partner para flujo bidireccional
+   */
+  @Post('emit')
+  @UseGuards(JwtAuthGuard)
+  async emitToPartner(@Body() dto: EmitPartnerEventDto) {
+    await this.partnerService.sendWebhookToPartner(dto.partnerId, {
+      eventType: dto.eventType,
+      timestamp: new Date().toISOString(),
+      data: dto.data || {},
+    });
+
+    return {
+      sent: true,
+      partnerId: dto.partnerId,
+      eventType: dto.eventType,
     };
   }
 }
