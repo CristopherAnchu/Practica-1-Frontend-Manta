@@ -1,5 +1,5 @@
 {
-  "name": "MCP Input Handler Workflow",
+  "name": "MCP Input Handler - Simple",
   "nodes": [
     {
       "parameters": {
@@ -8,39 +8,11 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "webhook-mcp",
-      "name": "Webhook MCP Input",
+      "name": "Webhook Input",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
-      "position": [250, 300]
-    },
-    {
-      "parameters": {
-        "functionCode": "// Procesar input multimodal\nconst input = $json.body;\nconst processedData = {\n  type: input.type || 'text',\n  userId: input.userId,\n  message: input.message,\n  hasFile: !!input.file,\n  timestamp: new Date().toISOString()\n};\n\nreturn processedData;"
-      },
-      "id": "process-input",
-      "name": "Process Input",
-      "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [450, 300]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "string": [
-            {
-              "value1": "={{$json.type}}",
-              "operation": "equals",
-              "value2": "text"
-            }
-          ]
-        }
-      },
-      "id": "input-type-check",
-      "name": "Is Text Only?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [650, 300]
+      "position": [250, 300],
+      "id": "webhook-input"
     },
     {
       "parameters": {
@@ -48,121 +20,14 @@
         "url": "http://host.docker.internal:3003/chat",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"message\": \"{{$json.message}}\",\n  \"userId\": \"{{$json.userId}}\"\n}",
+        "jsonBody": "={\n  \"message\": \"{{$json.body.message}}\",\n  \"userId\": \"{{$json.body.userId}}\"\n}",
         "options": {}
       },
-      "id": "ai-text-chat",
-      "name": "AI Text Chat",
+      "name": "AI Orchestrator",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [850, 200]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:3003/chat/multimodal",
-        "sendBody": true,
-        "contentType": "multipart-form-data",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "message",
-              "value": "={{$json.message}}"
-            },
-            {
-              "name": "file",
-              "value": "={{$json.file}}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "ai-multimodal-chat",
-      "name": "AI Multimodal Chat",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [850, 400]
-    },
-    {
-      "parameters": {
-        "functionCode": "// Analizar respuesta de AI para detectar tools ejecutados\nconst aiResponse = $json;\nconst toolsExecuted = [];\n\nif (aiResponse.toolCalls && aiResponse.toolCalls.length > 0) {\n  aiResponse.toolCalls.forEach(tool => {\n    toolsExecuted.push({\n      name: tool.name,\n      params: tool.parameters,\n      result: tool.result\n    });\n  });\n}\n\nreturn {\n  response: aiResponse.response,\n  toolsExecuted: toolsExecuted,\n  userId: $json.userId,\n  hasActions: toolsExecuted.length > 0\n};"
-      },
-      "id": "analyze-ai-response",
-      "name": "Analyze AI Response",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [1050, 300]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{$json.hasActions}}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "id": "has-actions-check",
-      "name": "Has MCP Actions?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [1250, 300]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:3000/mcp-audit",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"userId\": \"{{$json.userId}}\",\n  \"toolsExecuted\": {{JSON.stringify($json.toolsExecuted)}},\n  \"timestamp\": \"{{$now.toISOString()}}\"\n}",
-        "options": {}
-      },
-      "id": "log-mcp-actions",
-      "name": "Log MCP Actions",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [1450, 200]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:8080/api/notify",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"type\": \"ai-response\",\n  \"data\": {\n    \"userId\": \"{{$json.userId}}\",\n    \"response\": \"{{$json.response}}\",\n    \"actionsExecuted\": {{JSON.stringify($json.toolsExecuted)}}\n  }\n}",
-        "options": {}
-      },
-      "id": "notify-user-websocket",
-      "name": "Notify User",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [1650, 200]
-    },
-    {
-      "parameters": {
-        "values": {
-          "number": [
-            {
-              "name": "status",
-              "value": 200
-            }
-          ],
-          "string": [
-            {
-              "name": "response",
-              "value": "={{$json.response}}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "format-response",
-      "name": "Format Response",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 2,
-      "position": [1850, 300]
+      "position": [450, 300],
+      "id": "ai-orchestrator"
     },
     {
       "parameters": {
@@ -170,50 +35,19 @@
         "responseBody": "={{JSON.stringify($json)}}",
         "options": {}
       },
-      "id": "respond-webhook",
-      "name": "Respond to Webhook",
+      "name": "Respond Output",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [2050, 300]
+      "position": [650, 300],
+      "id": "respond-output"
     }
   ],
   "connections": {
-    "Webhook MCP Input": {
-      "main": [[{ "node": "Process Input", "type": "main", "index": 0 }]]
+    "Webhook Input": {
+      "main": [[{"node": "AI Orchestrator", "type": "main", "index": 0}]]
     },
-    "Process Input": {
-      "main": [[{ "node": "Is Text Only?", "type": "main", "index": 0 }]]
-    },
-    "Is Text Only?": {
-      "main": [
-        [{ "node": "AI Text Chat", "type": "main", "index": 0 }],
-        [{ "node": "AI Multimodal Chat", "type": "main", "index": 0 }]
-      ]
-    },
-    "AI Text Chat": {
-      "main": [[{ "node": "Analyze AI Response", "type": "main", "index": 0 }]]
-    },
-    "AI Multimodal Chat": {
-      "main": [[{ "node": "Analyze AI Response", "type": "main", "index": 0 }]]
-    },
-    "Analyze AI Response": {
-      "main": [[{ "node": "Has MCP Actions?", "type": "main", "index": 0 }]]
-    },
-    "Has MCP Actions?": {
-      "main": [
-        [{ "node": "Log MCP Actions", "type": "main", "index": 0 }],
-        [{ "node": "Format Response", "type": "main", "index": 0 }]
-      ]
-    },
-    "Log MCP Actions": {
-      "main": [[{ "node": "Notify User", "type": "main", "index": 0 }]]
-    },
-    "Notify User": {
-      "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]]
-    },
-    "Format Response": {
-      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    "AI Orchestrator": {
+      "main": [[{"node": "Respond Output", "type": "main", "index": 0}]]
     }
-  },
-  "pinData": {}
+  }
 }
