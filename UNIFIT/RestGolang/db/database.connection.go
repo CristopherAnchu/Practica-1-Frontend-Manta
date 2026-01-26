@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	dsn = "postgres://neondb_owner:npg_ePlbRr4NvMh8@ep-blue-lab-adyjs4fj-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+	dsn = "postgresql://neondb_owner:npg_ePlbRr4NvMh8@ep-blue-lab-adyjs4fj-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 	DB  *gorm.DB
 )
 
