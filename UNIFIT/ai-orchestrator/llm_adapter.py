@@ -78,6 +78,10 @@ Cuando un usuario pida hacer algo (crear reserva, rutina, etc), USA LAS HERRAMIE
 Sé amigable y usa emojis apropiados. (No le pidas informacion sencible al usuario, como la id o la contraseña, toda esa informacion deberas de obtenerla
 utilizando las herramientas disponibles.)"""
 
+            # Inyectar user_id en el contexto si está disponible
+            if user_id:
+                system_instruction += f"\n\nINFORMACIÓN DE CONTEXTO (Invisible para el usuario):\n- ID de Usuario Actual: {user_id}\n\nCuando uses herramientas que requieran 'userId', USA ESTE VALOR AUTOMÁTICAMENTE. NO le preguntes al usuario por su ID."
+
             # Generar contenido con herramientas
             chat = model.start_chat()
             response = chat.send_message(f"{system_instruction}\n\nUsuario: {message}")
@@ -210,8 +214,12 @@ class OpenAIAdapter(LLMAdapter):
         tools: Optional[List[Dict]] = None
     ) -> Dict[str, Any]:
         
+        system_content = "Eres un asistente virtual del gimnasio UNIFIT."
+        if user_id:
+             system_content += f" El ID del usuario actual es: {user_id}. Úsalo en las herramientas cuando sea necesario."
+
         messages = [
-            {"role": "system", "content": "Eres un asistente virtual del gimnasio UNIFIT."},
+            {"role": "system", "content": system_content},
             {"role": "user", "content": message}
         ]
         
