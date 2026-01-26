@@ -1,153 +1,190 @@
-# ======================================================
-# UNIFIT - Script de Inicio Automatico de Servicios
-# ======================================================
-# Este script inicia todos los servicios del sistema UNIFIT
-# en terminales separadas de PowerShell
-# ======================================================
+# UNIFIT - Script de Inicio Completo (Extensión Segundo Parcial)
+# Este script inicia todos los servicios de UNIFIT incluyendo los 4 nuevos pilares
 
-Write-Host ''
-Write-Host '=================================================' -ForegroundColor Cyan
-Write-Host 'UNIFIT - Sistema de Gestion de Gimnasio' -ForegroundColor Green
-Write-Host '=================================================' -ForegroundColor Cyan
-Write-Host ''
+Write-Host "UNIFIT - Iniciando Sistema Completo..." -ForegroundColor Cyan
+Write-Host "=============================================" -ForegroundColor Cyan
+Write-Host ""
 
-# Obtener directorio actual
-$rootPath = Get-Location
-
-Write-Host "Directorio raiz: $rootPath" -ForegroundColor Yellow
-Write-Host ''
-
-# ======================================================
-# 1. REST API (Golang) - Puerto 3000
-# ======================================================
-Write-Host 'Iniciando REST API (Golang)...' -ForegroundColor Blue
-$restPath = Join-Path $rootPath 'RestGolang'
-
-if (Test-Path $restPath) {
-    Start-Process powershell -ArgumentList @(
-        '-NoExit',
-        '-Command',
-        "cd '$restPath'; Write-Host 'REST API (Golang) - Puerto 3000' -ForegroundColor Green; go run main.go"
-    )
-    Write-Host '   Terminal REST API abierta' -ForegroundColor Green
-} else {
-    Write-Host '   No se encontro la carpeta RestGolang' -ForegroundColor Red
+# Función para verificar si un puerto está en uso
+function Test-Port {
+    param([int]$Port)
+    $connection = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+    return $null -ne $connection
 }
 
-Start-Sleep -Seconds 2
-
-# ======================================================
-# 2. GraphQL API (NestJS) - Puerto 4000
-# ======================================================
-Write-Host 'Iniciando GraphQL API (NestJS)...' -ForegroundColor Green
-$graphqlPath = Join-Path $rootPath 'graphql'
-
-if (Test-Path $graphqlPath) {
-    Start-Process powershell -ArgumentList @(
-        '-NoExit',
-        '-Command',
-        "cd '$graphqlPath'; Write-Host 'GraphQL API (NestJS) - Puerto 4000' -ForegroundColor Green; npm run start:dev"
+# Función para iniciar servicio en nueva ventana PowerShell
+function Start-LocalService {
+    param(
+        [string]$Name,
+        [string]$Path,
+        [string]$Command,
+        [int]$Port
     )
-    Write-Host '   Terminal GraphQL API abierta' -ForegroundColor Green
-} else {
-    Write-Host '   No se encontro la carpeta graphql' -ForegroundColor Red
-}
-
-Start-Sleep -Seconds 2
-
-# ======================================================
-# 3. WebSocket Server (Python) - Puerto 8080
-# ======================================================
-Write-Host 'Iniciando WebSocket Server (Python)...' -ForegroundColor Yellow
-$websocketPath = Join-Path $rootPath 'websocket-server'
-$venvPath = Join-Path $websocketPath 'venv\Scripts\Activate.ps1'
-
-if (Test-Path $websocketPath) {
-    if (Test-Path $venvPath) {
-        Start-Process powershell -ArgumentList @(
-            '-NoExit',
-            '-Command',
-            "cd '$websocketPath'; Write-Host 'WebSocket Server (Python) - Puerto 8080' -ForegroundColor Green; & '$venvPath'; python server.py"
-        )
-        Write-Host '   Terminal WebSocket Server abierta' -ForegroundColor Green
-    } else {
-        Write-Host '   Entorno virtual no encontrado. Intentando sin venv...' -ForegroundColor Yellow
-        Start-Process powershell -ArgumentList @(
-            '-NoExit',
-            '-Command',
-            "cd '$websocketPath'; Write-Host 'WebSocket Server (Python) - Puerto 8080' -ForegroundColor Green; python server.py"
-        )
+    
+    Write-Host "Iniciando $Name en puerto $Port..." -ForegroundColor Yellow
+    
+    if (Test-Port $Port) {
+        Write-Host "   Puerto $Port ya está en uso. Omitiendo..." -ForegroundColor Red
+        return
     }
-} else {
-    Write-Host '   No se encontro la carpeta websocket-server' -ForegroundColor Red
+    
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$Path'; $Command; Write-Host 'Servicio finalizado' -ForegroundColor Red"
+    Start-Sleep -Seconds 2
 }
+
+# Definir rutas base
+$BASE_PATH = $PSScriptRoot
+
+# ============================================
+# 1. Infraestructura (PostgreSQL)
+# ============================================
+Write-Host ""
+Write-Host "Paso 1: Verificando Infraestructura..." -ForegroundColor Green
+
+# PostgreSQL ya está en Neon Cloud (no requiere inicio local)
+Write-Host "   PostgreSQL: Neon Cloud (ep-blue-lab-adyjs4fj-pooler.c-2.us-east-1.aws.neon.tech)" -ForegroundColor Green
 
 Start-Sleep -Seconds 2
 
-# ======================================================
-# 4. Webhook Service (NodeJS) - Puerto 3005
-# ======================================================
-Write-Host 'Iniciando Webhook Service (NodeJS)...' -ForegroundColor Magenta
-$webhookPath = Join-Path $rootPath 'webhook-service'
+# ============================================
+# 2. Pilares del Segundo Parcial
+# ============================================
+Write-Host ""
+Write-Host "Paso 2: Iniciando Pilares del Segundo Parcial..." -ForegroundColor Green
 
-if (Test-Path $webhookPath) {
-    Start-Process powershell -ArgumentList @(
-        '-NoExit',
-        '-Command',
-        "cd '$webhookPath'; Write-Host 'Webhook Service (NodeJS) - Puerto 3005' -ForegroundColor Green; npm start"
-    )
-    Write-Host '   Terminal Webhook Service abierta' -ForegroundColor Green
-} else {
-    Write-Host '   No se encontro la carpeta webhook-service' -ForegroundColor Red
+# PILAR 1: Auth Service (Puerto 3001)
+Start-LocalService -Name "Auth Service (Pilar 1)" `
+              -Path "$BASE_PATH\auth-service" `
+              -Command "npm run start:dev" `
+              -Port 3001
+
+# PILAR 2: Payment Service (Puerto 3002)
+Start-LocalService -Name "Payment Service (Pilar 2)" `
+              -Path "$BASE_PATH\payment-service" `
+              -Command "npm run start:dev" `
+              -Port 3002
+
+# PILAR 3: AI Orchestrator (Puerto 3003)
+Start-LocalService -Name "AI Orchestrator (Pilar 3)" `
+              -Path "$BASE_PATH\ai-orchestrator" `
+              -Command "uvicorn main:app --reload" `
+              -Port 3003
+
+# PILAR 4: n8n (Puerto 5678)
+Write-Host "Iniciando n8n (Pilar 4) [DOCKER] en puerto 5678..." -ForegroundColor Yellow
+if (-not (Test-Port 5678)) {
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", "docker-compose up n8n; Write-Host 'n8n finalizado' -ForegroundColor Red"
+    Start-Sleep -Seconds 2
+}
+else {
+    Write-Host "   Puerto 5678 ya está en uso. Omitiendo..." -ForegroundColor Red
 }
 
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
-# ======================================================
-# 5. Frontend (Angular) - Puerto 4200
-# ======================================================
-Write-Host 'Iniciando Frontend (Angular)...' -ForegroundColor Red
-$frontendPath = Join-Path $rootPath 'gym-uleam'
+# ============================================
+# 3. Servicios del Primer Parcial
+# ============================================
+Write-Host ""
+Write-Host "Paso 3: Iniciando Servicios del Primer Parcial..." -ForegroundColor Green
 
-if (Test-Path $frontendPath) {
-    Start-Process powershell -ArgumentList @(
-        '-NoExit',
-        '-Command',
-        "cd '$frontendPath'; Write-Host 'Frontend (Angular) - Puerto 4200' -ForegroundColor Green; ng serve --open"
-    )
-    Write-Host '   Terminal Frontend abierta' -ForegroundColor Green
-} else {
-    Write-Host '   No se encontro la carpeta gym-uleam' -ForegroundColor Red
-}
+# REST API Golang (Puerto 3000)
+Start-LocalService -Name "REST API (Golang)" `
+              -Path "$BASE_PATH\RestGolang" `
+              -Command "go run main.go" `
+              -Port 3000
 
-# ======================================================
+# GraphQL API NestJS (Puerto 4000)
+Start-LocalService -Name "GraphQL API (NestJS)" `
+              -Path "$BASE_PATH\graphql" `
+              -Command "npm run start:dev" `
+              -Port 4000
+
+# WebSocket Server Python (Puerto 8080)
+Start-LocalService -Name "WebSocket Server (Python)" `
+              -Path "$BASE_PATH\websocket-server" `
+              -Command "`$env:PORT=8080; python main.py" `
+              -Port 8080
+
+Start-Sleep -Seconds 5
+
+# ============================================
+# 4. Frontend Angular
+# ============================================
+Write-Host ""
+Write-Host "Paso 4: Iniciando Frontend Angular..." -ForegroundColor Green
+
+Start-LocalService -Name "Frontend Angular" `
+              -Path "$BASE_PATH\gym-uleam" `
+              -Command "ng serve" `
+              -Port 4200
+
+# ============================================
 # Resumen
-# ======================================================
-Write-Host ''
-Write-Host '=================================================' -ForegroundColor Cyan
-Write-Host 'Todos los servicios han sido iniciados!' -ForegroundColor Green
-Write-Host '=================================================' -ForegroundColor Cyan
-Write-Host ''
-Write-Host 'URLs de los servicios:' -ForegroundColor Yellow
-Write-Host '   REST API (Golang):      http://localhost:3000' -ForegroundColor Cyan
-Write-Host '   GraphQL API (NestJS):   http://localhost:4000/graphql' -ForegroundColor Cyan
-Write-Host '   WebSocket Server:       http://localhost:8080' -ForegroundColor Cyan
-Write-Host '   Webhook Service:        http://localhost:3005' -ForegroundColor Cyan
-Write-Host '   Frontend (Angular):     http://localhost:4200' -ForegroundColor Cyan
-Write-Host ''
-Write-Host 'Espera aproximadamente 30-60 segundos para que todos los servicios esten listos' -ForegroundColor Yellow
-Write-Host ''
-Write-Host 'Verificaciones:' -ForegroundColor Yellow
-Write-Host '   REST API Health:     http://localhost:3000' -ForegroundColor White
-Write-Host '   GraphQL Playground:  http://localhost:4000/graphql' -ForegroundColor White
-Write-Host '   WebSocket Health:    http://localhost:8080/health' -ForegroundColor White
-Write-Host '   Webhook Health:      http://localhost:3005/health' -ForegroundColor White
-Write-Host '   Frontend UI:         http://localhost:4200' -ForegroundColor White
-Write-Host ''
-Write-Host 'Presiona Ctrl+C en cada terminal para detener los servicios' -ForegroundColor Magenta
-Write-Host ''
-Write-Host '=================================================' -ForegroundColor Cyan
-Write-Host ''
+# ============================================
+Start-Sleep -Seconds 10
 
-# Pausa final
-Read-Host 'Presiona Enter para cerrar esta ventana'
+Write-Host ""
+Write-Host "=============================================" -ForegroundColor Cyan
+Write-Host "UNIFIT - Sistema Iniciado Correctamente" -ForegroundColor Green
+Write-Host "=============================================" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Host "ESTADO DE LOS SERVICIOS:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "PILAR 1 - Auth Service:" -ForegroundColor Magenta
+Write-Host "   http://localhost:3001" -ForegroundColor White
+Write-Host "   Endpoints: /auth/login, /auth/register, /auth/refresh" -ForegroundColor Gray
+Write-Host ""
+
+Write-Host "PILAR 2 - Payment Service:" -ForegroundColor Magenta
+Write-Host "   http://localhost:3002" -ForegroundColor White
+Write-Host "   Endpoints: /payments, /partners/register, /webhook" -ForegroundColor Gray
+Write-Host ""
+
+Write-Host "PILAR 3 - AI Orchestrator:" -ForegroundColor Magenta
+Write-Host "   http://localhost:3003" -ForegroundColor White
+Write-Host "   Endpoints: /chat, /chat/multimodal, /tools" -ForegroundColor Gray
+Write-Host ""
+
+Write-Host "PILAR 4 - n8n Event Bus:" -ForegroundColor Magenta
+Write-Host "   http://localhost:5678" -ForegroundColor White
+Write-Host "   Credenciales: admin / unifit2026" -ForegroundColor Gray
+Write-Host ""
+
+Write-Host "SERVICIOS BASE:" -ForegroundColor Cyan
+Write-Host "   REST API (Golang):  http://localhost:3000" -ForegroundColor White
+Write-Host "   GraphQL:            http://localhost:4000/graphql" -ForegroundColor White
+Write-Host "   WebSocket:          ws://localhost:8080" -ForegroundColor White
+Write-Host "   Frontend:           http://localhost:4200" -ForegroundColor White
+Write-Host ""
+
+Write-Host "DOCUMENTACIÓN:" -ForegroundColor Yellow
+Write-Host "   README Principal:   .\README.md" -ForegroundColor White
+Write-Host "   Auth Service:       .\auth-service\README.md" -ForegroundColor White
+Write-Host "   Payment Service:    .\payment-service\README.md" -ForegroundColor White
+Write-Host "   AI Orchestrator:    .\ai-orchestrator\README.md" -ForegroundColor White
+Write-Host "   n8n Workflows:      .\n8n-workflows\README.md" -ForegroundColor White
+Write-Host ""
+
+Write-Host "TESTING RÁPIDO:" -ForegroundColor Yellow
+Write-Host "   # Probar Auth Service" -ForegroundColor Gray
+Write-Host '   Invoke-RestMethod -Method POST -Uri "http://localhost:3001/auth/register" -Body (@{email="test@unifit.com"; password="Test1234!"; nombre="Usuario Test"} | ConvertTo-Json) -ContentType "application/json"' -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "   # Probar AI Orchestrator" -ForegroundColor Gray
+Write-Host '   Invoke-RestMethod -Method POST -Uri "http://localhost:3003/chat" -Body (@{message="Hola, ¿cuántas reservas tengo?"; userId="123"} | ConvertTo-Json) -ContentType "application/json"' -ForegroundColor DarkGray
+Write-Host ""
+
+Write-Host "ALTERNATIVA DOCKER:" -ForegroundColor Yellow
+Write-Host "   docker-compose up -d" -ForegroundColor White
+Write-Host ""
+
+Write-Host "=============================================" -ForegroundColor Cyan
+Write-Host "💡 Presiona Ctrl+C en cada ventana para detener servicios individuales" -ForegroundColor Gray
+Write-Host "=============================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Mantener esta ventana abierta
+Write-Host "Esta ventana mostrará el estado general. No la cierres." -ForegroundColor Yellow
+Write-Host "Presiona Enter para finalizar todos los servicios..." -ForegroundColor Red
+Read-Host
