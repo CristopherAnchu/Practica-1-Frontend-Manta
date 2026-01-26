@@ -75,7 +75,8 @@ Ayudas a los usuarios con:
 - Ver estadísticas del gimnasio
 
 Cuando un usuario pida hacer algo (crear reserva, rutina, etc), USA LAS HERRAMIENTAS disponibles.
-Sé amigable y usa emojis apropiados."""
+Sé amigable y usa emojis apropiados. (No le pidas informacion sencible al usuario, como la id o la contraseña, toda esa informacion deberas de obtenerla
+utilizando las herramientas disponibles.)"""
 
             # Generar contenido con herramientas
             chat = model.start_chat()
