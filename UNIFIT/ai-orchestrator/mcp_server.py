@@ -6,7 +6,9 @@ Define y ejecuta herramientas que la IA puede invocar
 from typing import List, Dict, Any
 import aiohttp
 import os
-from datetime import datetime
+import jwt
+import time
+from datetime import datetime, timedelta
 
 
 class MCPServer:
@@ -16,10 +18,21 @@ class MCPServer:
         self.rest_api_url = os.getenv("REST_API_URL", "http://localhost:3000")
         self.graphql_api_url = os.getenv("GRAPHQL_API_URL", "http://localhost:4000/graphql")
         self.payment_api_url = os.getenv("PAYMENT_API_URL", "http://localhost:3002")
+        self.jwt_secret = os.getenv("JWT_SECRET", "supersecretkey")
         
         # Registrar herramientas
         self.tools = self._register_tools()
         print(f"✅ MCP Server inicializado con {len(self.tools)} herramientas")
+
+    def _get_auth_header(self, user_id: str = "ai-agent") -> Dict[str, str]:
+        """Genera un token JWT para autenticación con el backend"""
+        payload = {
+            "user_id": user_id,
+            "rol": "ADMINISTRADOR", # Rol con permisos suficientes
+            "exp": time.time() + 3600 # 1 hora de expiración
+        }
+        token = jwt.encode(payload, self.jwt_secret, algorithm="HS256")
+        return {"Authorization": f"Bearer {token}"}
     
     def _register_tools(self) -> List[Dict]:
         """Registra todas las herramientas MCP disponibles"""
@@ -187,8 +200,13 @@ class MCPServer:
     async def tool_buscar_reservas(self, params: Dict) -> Dict:
         """HERRAMIENTA 1: Buscar reservas"""
         try:
+            headers = self._get_auth_header(user_id=params.get("userId", "ai-agent"))
+            
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.rest_api_url}/reservas") as response:
+                async with session.get(
+                    f"{self.rest_api_url}/reservas",
+                    headers=headers
+                ) as response:
                     if response.status == 200:
                         reservas = await response.json()
                         
@@ -205,7 +223,8 @@ class MCPServer:
                             "reservas": reservas[:10]  # Limitar a 10
                         }
                     else:
-                        return {"success": False, "error": "Error al obtener reservas"}
+                        error_text = await response.text()
+                        return {"success": False, "error": f"Error al obtener reservas: {response.status} - {error_text}"}
         except Exception as e:
             return {"success": False, "error": str(e)}
     
@@ -216,8 +235,13 @@ class MCPServer:
             if not user_id:
                 return {"success": False, "error": "userId requerido"}
             
+            headers = self._get_auth_header(user_id=user_id)
+            
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.rest_api_url}/users/{user_id}") as response:
+                async with session.get(
+                    f"{self.rest_api_url}/users/{user_id}",
+                    headers=headers
+                ) as response:
                     if response.status == 200:
                         usuario = await response.json()
                         return {
@@ -248,12 +272,15 @@ class MCPServer:
             
             print(f"🔧 Intentando crear reserva: {reserva_data}")
             
+            headers = self._get_auth_header(user_id=reserva_data["userId"])
+            
             async with aiohttp.ClientSession() as session:
                 try:
                     # Intentar con REST API
                     async with session.post(
                         f"{self.rest_api_url}/reservas",
                         json=reserva_data,
+                        headers=headers,
                         timeout=aiohttp.ClientTimeout(total=5)
                     ) as response:
                         if response.status in [200, 201]:

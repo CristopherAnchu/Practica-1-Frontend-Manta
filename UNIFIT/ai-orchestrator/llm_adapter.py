@@ -35,11 +35,15 @@ class GeminiAdapter(LLMAdapter):
                 print("⚠️ GEMINI_API_KEY no configurada, fallback a Mock")
                 raise ValueError("No API key")
             
+            # Mostrar key enmascarada para debug
+            masked_key = f"{api_key[:5]}...{api_key[-5:]}" if len(api_key) > 10 else "***"
+            print(f"🔑 Usando API Key: {masked_key}")
+
             genai.configure(api_key=api_key)
-            # Usando gemini-2.0-flash-exp (mejor para function calling)
-            self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+            # Usando gemini-2.0-flash (modelo disponible y validado)
+            self.model = genai.GenerativeModel('gemini-2.0-flash')
             self.genai = genai
-            print("✅ Gemini Adapter inicializado (gemini-2.0-flash-exp) con Function Calling")
+            print("✅ Gemini Adapter inicializado (gemini-2.0-flash) con Function Calling")
         except Exception as e:
             print(f"❌ Error inicializando Gemini: {str(e)}")
             print("⚠️ Usando Mock Adapter como fallback")
@@ -60,7 +64,7 @@ class GeminiAdapter(LLMAdapter):
             # Crear el modelo con las herramientas
             if gemini_tools:
                 model = self.genai.GenerativeModel(
-                    'gemini-2.0-flash-exp',
+                    'gemini-2.0-flash',
                     tools=gemini_tools
                 )
             else:

@@ -14,7 +14,8 @@ from llm_adapter import LLMAdapterFactory
 from mcp_server import MCPServer
 from multimodal_processor import MultimodalProcessor
 
-load_dotenv()
+# Forzar recarga de variables de entorno para detectar cambios en .env durante desarrollo
+load_dotenv(override=True)
 
 app = FastAPI(
     title="UNIFIT AI Orchestrator",
