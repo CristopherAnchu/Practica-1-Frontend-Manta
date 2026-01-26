@@ -165,19 +165,33 @@ utilizando las herramientas disponibles.)"""
         gemini_tools = []
         
         for tool in tools:
-            # Convertir parámetros al formato de Gemini
+            # Construir properties manualmente para poder manejar arrays
+            converted_properties = {}
+            for prop_name, prop_info in tool["parameters"].get("properties", {}).items():
+                prop_type = self._get_gemini_type(prop_info.get("type", "string"))
+                
+                # Configurar el esquema básico
+                schema = self.genai.protos.Schema(
+                    type=prop_type,
+                    description=prop_info.get("description", "")
+                )
+                
+                # Si es array, configurar items
+                if prop_type == self.genai.protos.Type.ARRAY and "items" in prop_info:
+                    items_info = prop_info["items"]
+                    items_type = self._get_gemini_type(items_info.get("type", "string"))
+                    schema.items = self.genai.protos.Schema(
+                        type=items_type
+                    )
+                
+                converted_properties[prop_name] = schema
+
             gemini_tool = self.genai.protos.FunctionDeclaration(
                 name=tool["name"],
                 description=tool["description"],
                 parameters=self.genai.protos.Schema(
                     type=self.genai.protos.Type.OBJECT,
-                    properties={
-                        prop_name: self.genai.protos.Schema(
-                            type=self._get_gemini_type(prop_info.get("type", "string")),
-                            description=prop_info.get("description", "")
-                        )
-                        for prop_name, prop_info in tool["parameters"].get("properties", {}).items()
-                    },
+                    properties=converted_properties,
                     required=tool["parameters"].get("required", [])
                 )
             )

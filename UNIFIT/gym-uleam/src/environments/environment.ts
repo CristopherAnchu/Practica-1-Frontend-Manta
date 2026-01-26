@@ -14,7 +14,7 @@ export const environment = {
   // NUEVOS SERVICIOS - Segundo Parcial
   authServiceUrl: 'http://localhost:3001/auth',
   paymentServiceUrl: 'http://localhost:3002',
-  aiOrchestratorUrl: 'http://localhost:3003',
+  aiOrchestratorUrl: 'http://localhost:8000',
     // AI / LLM provider config - coloca aquí la URL o clave cuando quieras cambiar de proveedor
   // Ej.: provider: 'mock' | 'openai' | 'gemini', apiKey: 'tu_api_key'
   ai: {
