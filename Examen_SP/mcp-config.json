@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "exam2p-auditoria": {
+      "command": "node",
+      "args": ["./mcp-tool/index.js"],
+      "env": {
+        "API_URL": "http://localhost:3000/exam2p-auditoria"
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for audit
+  postgres-audit:
+    image: postgres:15-alpine
+    container_name: exam2p-postgres-audit
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: exam2p_audit
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_audit_data:/var/lib/postgresql/data
+    networks:
+      - exam2p-network
+
+  # RabbitMQ for asynchronous messaging
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: exam2p-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - exam2p-network
+
+  # n8n for automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: exam2p-n8n
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - exam2p-network
+
+volumes:
+  postgres_audit_data:
+  rabbitmq_data:
+  n8n_data:
+
+networks:
+  exam2p-network:
+    driver: bridge
